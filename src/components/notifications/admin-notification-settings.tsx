@@ -17,6 +17,7 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { runReminderSchedulerFn } from "@/server/scheduler";
+import { dispatchNotificationServerFn } from "@/server/notifications";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -150,6 +151,43 @@ export function AdminNotificationSettings() {
     }
   };
 
+  const [isSendingTest, setIsSendingTest] = useState(false);
+
+  // Send a test confirmation email for the latest appointment
+  const handleSendTestEmail = async () => {
+    setIsSendingTest(true);
+    try {
+      const { data: apts } = await supabase
+        .from("appointments")
+        .select("id, client_name")
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      const target = apts?.[0];
+      if (!target) {
+        toast.error("No appointments found in database to test with.");
+        return;
+      }
+      const res = await dispatchNotificationServerFn({
+        data: {
+          appointmentId: target.id,
+          type: "appointment_confirmation",
+        },
+      });
+
+      if (res.success) {
+        toast.success(`Confirmation email sent for ${target.client_name}! Check Resend dashboard.`);
+        void refetchLogs();
+      } else {
+        toast.error(`Error: ${res.error || "Failed to send test email"}`);
+      }
+    } catch (err) {
+      toast.error("Failed to send test: " + (err instanceof Error ? err.message : ""));
+    } finally {
+      setIsSendingTest(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "sent":
@@ -203,16 +241,27 @@ export function AdminNotificationSettings() {
               Studio Notification System Rules
             </h3>
           </div>
-          <Button
-            size="sm"
-            variant="outline"
-            className="rounded-full gap-1.5 text-xs"
-            onClick={handleTriggerProcessor}
-            disabled={isProcessing}
-          >
-            {isProcessing ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
-            Run Reminder Scheduler Now
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              className="rounded-full gap-1.5 text-xs shadow-sm bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={handleSendTestEmail}
+              disabled={isSendingTest}
+            >
+              {isSendingTest ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
+              Send Test Confirmation Email
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-full gap-1.5 text-xs"
+              onClick={handleTriggerProcessor}
+              disabled={isProcessing}
+            >
+              {isProcessing ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
+              Run Reminder Scheduler Now
+            </Button>
+          </div>
         </div>
         <p className="text-xs text-muted-foreground mb-6">
           Global notification toggles for Lumière Nails. Disabling a notification here stops it studio-wide regardless of individual client preferences.
