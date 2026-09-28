@@ -28,17 +28,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
+import { useServices } from "@/hooks/use-salon-data";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { dispatchAdminNotification } from "@/lib/notifications/dispatcher";
 import {
-  SERVICES,
   buildDaySlots,
   isPastSlot,
   normalizeTime,
   toDateKey,
   type Service,
 } from "@/lib/salon";
+
 
 export const Route = createFileRoute("/book")({
   head: () => ({
@@ -74,6 +75,7 @@ const STEPS = ["טיפול", "תאריך ושעה", "פרטים", "אישור"];
 
 function BookPage() {
   const { user, profile, refreshProfile, signOut } = useAuth();
+  const { data: services = [] } = useServices({ activeOnly: true });
 
   const [step, setStep] = useState(0);
   const [service, setService] = useState<Service | null>(null);
@@ -327,7 +329,7 @@ function BookPage() {
             </div>
 
             <div className="mt-6 space-y-3">
-              {SERVICES.map((item) => (
+              {services.map((item) => (
                 <button
                   key={item.id}
                   type="button"

@@ -4,11 +4,12 @@ import { ArrowLeft, Heart, Leaf, Sparkles } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
-import { SERVICES } from "@/lib/salon";
+import { useSalonInfo, useServices, useGalleryImages } from "@/hooks/use-salon-data";
 import heroImage from "@/assets/hero.jpg";
 import gallery1 from "@/assets/gallery-1.jpg";
 import gallery2 from "@/assets/gallery-2.jpg";
 import gallery3 from "@/assets/gallery-3.jpg";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,6 +31,17 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
+  const { data: services = [] } = useServices({ activeOnly: true });
+  const { data: salonInfo } = useSalonInfo();
+  const { data: galleryImages = [] } = useGalleryImages();
+
+  // Fallback static gallery when DB is empty
+  const staticGallery = [
+    { id: "g1", url: gallery1, alt_text: "שולחן מניקור מעוצב בסטודיו אליאל ביוטי", sort_order: 0 },
+    { id: "g2", url: gallery2, alt_text: "פרנץ' ג'ל עדין ומדויק", sort_order: 1 },
+    { id: "g3", url: gallery3, alt_text: "פדיקור מפנק עם עלי ורדים", sort_order: 2 },
+  ];
+  const displayGallery = galleryImages.length > 0 ? galleryImages : staticGallery;
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -88,7 +100,7 @@ function Landing() {
           <h2 className="mt-3 text-4xl md:text-5xl font-medium">טיפולים ומחירים</h2>
         </div>
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {SERVICES.map((service) => (
+          {services.map((service) => (
             <article
               key={service.id}
               className="shadow-card rounded-3xl border border-border/70 bg-card p-6 transition-transform hover:-translate-y-1"
@@ -111,15 +123,11 @@ function Landing() {
             <h2 className="mt-3 text-4xl md:text-5xl font-medium">הצצה לסטודיו</h2>
           </div>
           <div className="mt-10 grid gap-4 sm:grid-cols-3">
-            {[
-              { src: gallery1, alt: "שולחן מניקור מעוצב בסטודיו אליאל ביוטי" },
-              { src: gallery2, alt: "פרנץ' ג'ל עדין ומדויק" },
-              { src: gallery3, alt: "פדיקור מפנק עם עלי ורדים" },
-            ].map((image) => (
-              <div key={image.alt} className="overflow-hidden rounded-3xl">
+            {displayGallery.map((image) => (
+              <div key={image.id} className="overflow-hidden rounded-3xl">
                 <img
-                  src={image.src}
-                  alt={image.alt}
+                  src={typeof image.url === "string" ? image.url : (image.url as unknown as string)}
+                  alt={image.alt_text}
                   loading="lazy"
                   width={912}
                   height={912}

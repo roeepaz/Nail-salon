@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
-import { CalendarClock, LogOut, Plus, Sparkles, Trash2, Bell, Check } from "lucide-react";
+import { CalendarClock, LogOut, Plus, Sparkles, Trash2, Bell, Check, Settings2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
@@ -42,6 +42,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { AdminNotificationSettings } from "@/components/notifications/admin-notification-settings";
 import { dispatchAppointmentNotification } from "@/lib/notifications/dispatcher";
 import { DAY_NAMES, normalizeTime, toDateKey, SERVICES } from "@/lib/salon";
+import { useServices } from "@/hooks/use-salon-data";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -209,6 +211,13 @@ function Dashboard() {
   const rows = appointments.data ?? [];
   const todays = rows.filter((a) => a.appointment_date === todayKey && a.status !== "canceled");
   const upcoming = rows.filter((a) => a.appointment_date > todayKey && a.status !== "canceled");
+  const { data: dbServices = SERVICES } = useServices({ activeOnly: false });
+
+  function getServiceName(serviceType: string) {
+    const found = dbServices.find((s) => s.id === serviceType || s.name === serviceType);
+    return found?.name || serviceType;
+  }
+
 
   return (
     <div className="min-h-screen bg-background text-right" dir="rtl">
@@ -220,9 +229,19 @@ function Dashboard() {
               אליאל ביוטי — ניהול סטודיו
             </span>
           </div>
-          <Button variant="ghost" size="sm" className="shrink-0 rounded-full gap-1.5" onClick={signOut}>
-            <LogOut className="size-4" /> התנתקות
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 rounded-full gap-1.5"
+              onClick={() => void navigate({ to: "/settings" })}
+            >
+              <Settings2 className="size-4" /> עריכה
+            </Button>
+            <Button variant="ghost" size="sm" className="shrink-0 rounded-full gap-1.5" onClick={signOut}>
+              <LogOut className="size-4" /> התנתקות
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -288,9 +307,6 @@ function Dashboard() {
                     </TableRow>
                   )}
                   {rows.map((row) => {
-                    const serviceInfo = SERVICES.find(
-                      (s) => s.id === row.service_type || s.name === row.service_type,
-                    );
                     return (
                       <TableRow key={row.id}>
                         <TableCell className="whitespace-nowrap">
@@ -303,7 +319,7 @@ function Dashboard() {
                         <TableCell className="whitespace-nowrap font-mono text-xs" dir="ltr">
                           {row.client_phone}
                         </TableCell>
-                        <TableCell>{serviceInfo?.name || row.service_type}</TableCell>
+                        <TableCell>{getServiceName(row.service_type)}</TableCell>
                         <TableCell>
                           <Select
                             value={row.status}
