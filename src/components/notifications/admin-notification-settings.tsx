@@ -57,7 +57,7 @@ interface NotificationLog {
 export function AdminNotificationSettings() {
   const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "sent" | "failed" | "skipped">("all");
 
   // Fetch business settings
   const { data: settings, isLoading: isLoadingSettings } = useQuery({
@@ -304,7 +304,7 @@ export function AdminNotificationSettings() {
           <div className="flex items-center gap-2">
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => setStatusFilter(e.target.value as "all" | "pending" | "sent" | "failed" | "skipped")}
               className="text-xs bg-muted/60 border border-border rounded-lg px-2.5 py-1.5"
             >
               <option value="all">All Statuses</option>
