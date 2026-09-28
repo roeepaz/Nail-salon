@@ -1,0 +1,195 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design system — Gel polish salon.
+ * Palette: soft blush pink, warm nude, porcelain white, deep rose text.
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-nude: var(--nude);
+  --color-blush: var(--blush);
+  --color-rose: var(--rose);
+  --color-gold: var(--gold);
+  --color-success: var(--success);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Jost", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --radius: 1rem;
+  --background: oklch(0.985 0.006 40);
+  --foreground: oklch(0.32 0.045 18);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.32 0.045 18);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.32 0.045 18);
+  --primary: oklch(0.62 0.108 15);
+  --primary-foreground: oklch(0.99 0.004 40);
+  --secondary: oklch(0.945 0.02 40);
+  --secondary-foreground: oklch(0.38 0.05 18);
+  --muted: oklch(0.955 0.013 40);
+  --muted-foreground: oklch(0.55 0.032 25);
+  --accent: oklch(0.928 0.032 20);
+  --accent-foreground: oklch(0.36 0.05 18);
+  --destructive: oklch(0.56 0.19 25);
+  --destructive-foreground: oklch(0.99 0.004 40);
+  --border: oklch(0.906 0.018 30);
+  --input: oklch(0.906 0.018 30);
+  --ring: oklch(0.72 0.075 15);
+
+  --nude: oklch(0.905 0.032 55);
+  --blush: oklch(0.935 0.038 15);
+  --rose: oklch(0.62 0.108 15);
+  --gold: oklch(0.76 0.09 78);
+  --success: oklch(0.6 0.1 155);
+
+  --gradient-hero: linear-gradient(
+    160deg,
+    oklch(0.99 0.006 60) 0%,
+    oklch(0.955 0.028 25) 55%,
+    oklch(0.93 0.036 35) 100%
+  );
+  --gradient-rose: linear-gradient(120deg, oklch(0.68 0.098 12), oklch(0.78 0.072 45));
+  --shadow-soft: 0 18px 50px -24px color-mix(in oklab, var(--rose) 45%, transparent);
+  --shadow-card: 0 10px 34px -20px color-mix(in oklab, var(--rose) 38%, transparent);
+  --transition-smooth: 220ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  --chart-1: oklch(0.68 0.098 12);
+  --chart-2: oklch(0.78 0.072 45);
+  --chart-3: oklch(0.76 0.09 78);
+  --chart-4: oklch(0.6 0.1 155);
+  --chart-5: oklch(0.55 0.032 25);
+  --sidebar: oklch(0.975 0.012 40);
+  --sidebar-foreground: oklch(0.32 0.045 18);
+  --sidebar-primary: oklch(0.62 0.108 15);
+  --sidebar-primary-foreground: oklch(0.99 0.004 40);
+  --sidebar-accent: oklch(0.928 0.032 20);
+  --sidebar-accent-foreground: oklch(0.36 0.05 18);
+  --sidebar-border: oklch(0.906 0.018 30);
+  --sidebar-ring: oklch(0.72 0.075 15);
+}
+
+.dark {
+  --background: oklch(0.2 0.018 20);
+  --foreground: oklch(0.95 0.012 40);
+  --card: oklch(0.25 0.022 20);
+  --card-foreground: oklch(0.95 0.012 40);
+  --popover: oklch(0.25 0.022 20);
+  --popover-foreground: oklch(0.95 0.012 40);
+  --primary: oklch(0.75 0.088 15);
+  --primary-foreground: oklch(0.22 0.02 20);
+  --secondary: oklch(0.3 0.024 20);
+  --secondary-foreground: oklch(0.95 0.012 40);
+  --muted: oklch(0.3 0.024 20);
+  --muted-foreground: oklch(0.72 0.02 30);
+  --accent: oklch(0.34 0.03 18);
+  --accent-foreground: oklch(0.95 0.012 40);
+  --destructive: oklch(0.66 0.17 25);
+  --destructive-foreground: oklch(0.98 0.004 40);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.6 0.06 15);
+  --nude: oklch(0.42 0.03 55);
+  --blush: oklch(0.4 0.035 15);
+  --rose: oklch(0.75 0.088 15);
+  --gold: oklch(0.78 0.09 78);
+  --success: oklch(0.7 0.1 155);
+  --sidebar: oklch(0.25 0.022 20);
+  --sidebar-foreground: oklch(0.95 0.012 40);
+  --sidebar-primary: oklch(0.75 0.088 15);
+  --sidebar-primary-foreground: oklch(0.22 0.02 20);
+  --sidebar-accent: oklch(0.34 0.03 18);
+  --sidebar-accent-foreground: oklch(0.95 0.012 40);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.6 0.06 15);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 300;
+    letter-spacing: -0.01em;
+  }
+}
+
+@utility surface-hero {
+  background-image: var(--gradient-hero);
+}
+
+@utility text-gradient-rose {
+  background-image: var(--gradient-rose);
+  background-clip: text;
+  color: transparent;
+}
+
+@utility shadow-soft {
+  box-shadow: var(--shadow-soft);
+}
+
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+@utility eyebrow {
+  font-size: 0.7rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
