@@ -113,11 +113,11 @@ export function UserNotificationSettings() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Notification preferences updated");
+      toast.success("הגדרות ההתראות עודכנו בהצלחה");
       void queryClient.invalidateQueries({ queryKey: ["notification_preferences", user?.id] });
     },
     onError: (err) => {
-      toast.error("Failed to update preferences: " + (err instanceof Error ? err.message : "Unknown error"));
+      toast.error("שגיאה בעדכון ההגדרות: " + (err instanceof Error ? err.message : "שגיאה לא ידועה"));
     },
   });
 
@@ -133,10 +133,10 @@ export function UserNotificationSettings() {
     setPushState(getPushPermissionState());
 
     if (res.success) {
-      toast.success("Browser notifications enabled!");
+      toast.success("התראות דפדפן הופעלו בהצלחה!");
       updateMutation.mutate({ web_push_enabled: true });
     } else {
-      toast.error(res.error || "Could not enable browser notifications");
+      toast.error(res.error || "לא ניתן היה להפעיל התראות דפדפן");
     }
   };
 
@@ -146,14 +146,14 @@ export function UserNotificationSettings() {
     await unsubscribeFromPush(user.id);
     setIsSubscribingPush(false);
     updateMutation.mutate({ web_push_enabled: false });
-    toast.success("Browser notifications disabled for this device");
+    toast.success("התראות דפדפן בוטלו עבור מכשיר זה");
   };
 
   const handleSavePhone = async () => {
     if (!user) return;
     const normalized = normalizePhoneNumber(phoneNumber);
     if (!isValidE164(normalized)) {
-      toast.error("Please enter a valid phone number (e.g. 050-123-4567 or +972501234567)");
+      toast.error("נא להזין מספר טלפון תקין (לדוגמה 050-123-4567 או 972501234567+)");
       return;
     }
 
@@ -168,9 +168,9 @@ export function UserNotificationSettings() {
 
       await refreshProfile();
       setPhoneNumber(normalized);
-      toast.success(`WhatsApp number updated to ${normalized}`);
+      toast.success(`מספר ה-WhatsApp עודכן ל-${normalized}`);
     } catch (err) {
-      toast.error("Failed to update phone number: " + (err instanceof Error ? err.message : ""));
+      toast.error("שגיאה בעדכון מספר הטלפון: " + (err instanceof Error ? err.message : ""));
     } finally {
       setIsSavingPhone(false);
     }
@@ -179,8 +179,8 @@ export function UserNotificationSettings() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8 text-muted-foreground">
-        <Loader2 className="size-5 animate-spin mr-2" />
-        <span>Loading notification settings…</span>
+        <Loader2 className="size-5 animate-spin ml-2" />
+        <span>טוען הגדרות התראות…</span>
       </div>
     );
   }
@@ -196,14 +196,14 @@ export function UserNotificationSettings() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" dir="rtl">
       {/* Section 1: Notification Channels */}
       <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
         <h3 className="text-lg font-display font-medium text-foreground mb-1">
-          Notification Channels
+          ערוצי התראה
         </h3>
         <p className="text-xs text-muted-foreground mb-6">
-          Choose where and how you want to receive appointment reminders.
+          בחרי היכן וכיצד תרצי לקבל תזכורות ועדכונים על התורים שלך.
         </p>
 
         <div className="space-y-6 divide-y divide-border/50">
@@ -217,26 +217,26 @@ export function UserNotificationSettings() {
                 <div>
                   <div className="flex items-center gap-2">
                     <Label htmlFor="web_push_toggle" className="font-medium text-sm cursor-pointer">
-                      Browser notifications
+                      התראות דפדפן (Web Push)
                     </Label>
                     {pushState === "granted" && (
                       <Badge variant="outline" className="text-emerald-700 bg-emerald-50 border-emerald-200 text-[11px] gap-1 py-0">
-                        <CheckCircle2 className="size-3" /> Granted
+                        <CheckCircle2 className="size-3" /> פעיל
                       </Badge>
                     )}
                     {pushState === "denied" && (
                       <Badge variant="outline" className="text-destructive bg-destructive/10 border-destructive/20 text-[11px] gap-1 py-0">
-                        <XCircle className="size-3" /> Denied
+                        <XCircle className="size-3" /> חסום
                       </Badge>
                     )}
                     {pushState === "prompt" && (
                       <Badge variant="outline" className="text-muted-foreground text-[11px] py-0">
-                        Not requested
+                        טרם הופעל
                       </Badge>
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Receive instant push alerts on this browser.
+                    קבלת התראות קופצות ישירות לדפדפן במכשיר זה.
                   </p>
                 </div>
               </div>
@@ -251,9 +251,9 @@ export function UserNotificationSettings() {
                     onClick={handleEnablePush}
                   >
                     {isSubscribingPush ? (
-                      <Loader2 className="size-3 animate-spin mr-1" />
+                      <Loader2 className="size-3 animate-spin ml-1" />
                     ) : null}
-                    Enable browser notifications
+                    הפעלת התראות דפדפן
                   </Button>
                 ) : (
                   <Switch
@@ -269,7 +269,7 @@ export function UserNotificationSettings() {
               <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-xs text-destructive flex items-start gap-2.5">
                 <AlertCircle className="size-4 shrink-0 mt-0.5" />
                 <div>
-                  <strong>Browser notifications are blocked.</strong> To enable them: click the settings/lock icon in your browser address bar next to the website URL, open <em>Site Settings</em>, and change <em>Notifications</em> to <strong>Allow</strong>.
+                  <strong>התראות הדפדפן חסומות.</strong> כדי להפעילן: לחצי על סמל המנעול בסרגל הכתובות של הדפדפן, פתחי את <em>הגדרות האתר</em>, ושני את הרשאת <em>ההתראות (Notifications)</em> ל-<strong>אפשר (Allow)</strong>.
                 </div>
               </div>
             )}
@@ -283,10 +283,10 @@ export function UserNotificationSettings() {
               </div>
               <div>
                 <Label htmlFor="email_toggle" className="font-medium text-sm cursor-pointer">
-                  Email notifications
+                  התראות באימייל
                 </Label>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Sent to <span className="font-mono text-foreground">{profile?.email || user?.email}</span>
+                  נשלח לכתובת <span className="font-mono text-foreground">{profile?.email || user?.email}</span>
                 </p>
               </div>
             </div>
@@ -307,10 +307,10 @@ export function UserNotificationSettings() {
                 </div>
                 <div>
                   <Label htmlFor="whatsapp_toggle" className="font-medium text-sm cursor-pointer">
-                    WhatsApp notifications
+                    הודעות WhatsApp
                   </Label>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Sent via official WhatsApp Business API
+                    הודעות תזכורת ואישור ישירות ל-WhatsApp שלך
                   </p>
                 </div>
               </div>
@@ -326,14 +326,15 @@ export function UserNotificationSettings() {
             <div className="mt-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-muted/40 p-3 rounded-xl border border-border/50">
               <div className="flex items-center gap-2 text-xs text-muted-foreground shrink-0">
                 <Phone className="size-3.5" />
-                <span>WhatsApp Phone:</span>
+                <span>טלפון ל-WhatsApp:</span>
               </div>
               <Input
                 type="tel"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="+972501234567"
-                className="h-8 text-xs font-mono bg-background"
+                placeholder="050-1234567"
+                dir="ltr"
+                className="h-8 text-xs font-mono bg-background text-left"
               />
               <Button
                 size="sm"
@@ -343,7 +344,7 @@ export function UserNotificationSettings() {
                 onClick={handleSavePhone}
               >
                 {isSavingPhone ? <Loader2 className="size-3 animate-spin" /> : <Save className="size-3" />}
-                Update Phone
+                עדכון טלפון
               </Button>
             </div>
           </div>
@@ -353,20 +354,20 @@ export function UserNotificationSettings() {
       {/* Section 2: Notification Event Triggers */}
       <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
         <h3 className="text-lg font-display font-medium text-foreground mb-1">
-          Notification Preferences
+          סוגי התראות
         </h3>
         <p className="text-xs text-muted-foreground mb-6">
-          Specify which reminders and updates you wish to receive.
+          בחרי אילו תזכורות ועדכונים תרצי לקבל.
         </p>
 
         <div className="space-y-5 divide-y divide-border/50">
           <div className="pt-3 first:pt-0 flex items-center justify-between">
             <div>
               <Label htmlFor="pref_confirmation" className="font-medium text-sm cursor-pointer">
-                Appointment confirmation
+                אישור תור
               </Label>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Sent immediately after you book an appointment
+                נשלח באופן מיידי בעת קביעת התור
               </p>
             </div>
             <Switch
@@ -379,10 +380,10 @@ export function UserNotificationSettings() {
           <div className="pt-4 flex items-center justify-between">
             <div>
               <Label htmlFor="pref_24h" className="font-medium text-sm cursor-pointer">
-                24-hour reminder
+                תזכורת 24 שעות מראש
               </Label>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Sent one day prior to your scheduled appointment
+                נשלחת יום לפני מועד התור המתוכנן
               </p>
             </div>
             <Switch
@@ -395,10 +396,10 @@ export function UserNotificationSettings() {
           <div className="pt-4 flex items-center justify-between">
             <div>
               <Label htmlFor="pref_1h" className="font-medium text-sm cursor-pointer">
-                1-hour reminder
+                תזכורת שעה לפני
               </Label>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Sent 1 hour before your appointment starts
+                נשלחת שעה אחת לפני מועד תחילת הטיפול
               </p>
             </div>
             <Switch
@@ -411,10 +412,10 @@ export function UserNotificationSettings() {
           <div className="pt-4 flex items-center justify-between">
             <div>
               <Label htmlFor="pref_cancellation" className="font-medium text-sm cursor-pointer">
-                Cancellation notification
+                הודעת ביטול תור
               </Label>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Sent if an appointment is canceled
+                נשלחת במידה והתור בוטל
               </p>
             </div>
             <Switch

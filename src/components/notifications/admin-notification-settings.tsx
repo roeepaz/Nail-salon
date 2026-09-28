@@ -210,19 +210,19 @@ export function AdminNotificationSettings() {
       case "sent":
         return (
           <Badge variant="outline" className="text-emerald-700 bg-emerald-50 border-emerald-200 text-xs gap-1">
-            <CheckCircle2 className="size-3" /> Sent
+            <CheckCircle2 className="size-3" /> נשלח
           </Badge>
         );
       case "failed":
         return (
           <Badge variant="outline" className="text-destructive bg-destructive/10 border-destructive/20 text-xs gap-1">
-            <XCircle className="size-3" /> Failed
+            <XCircle className="size-3" /> נכשל
           </Badge>
         );
       case "skipped":
         return (
           <Badge variant="outline" className="text-amber-700 bg-amber-50 border-amber-200 text-xs gap-1">
-            <AlertTriangle className="size-3" /> Skipped
+            <AlertTriangle className="size-3" /> דולג
           </Badge>
         );
       default:
@@ -240,62 +240,67 @@ export function AdminNotificationSettings() {
       email: "bg-blue-50 text-blue-700 border-blue-200",
       whatsapp: "bg-emerald-50 text-emerald-700 border-emerald-200",
     };
+    const labels: Record<string, string> = {
+      push: "התראת דפדפן",
+      email: "דוא״ל",
+      whatsapp: "ווטסאפ",
+    };
     return (
       <Badge variant="outline" className={`text-[11px] font-mono capitalize ${colors[channel] || ""}`}>
-        {channel}
+        {labels[channel] || channel}
       </Badge>
     );
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 text-right" dir="rtl">
       {/* Studio Notification Rules */}
       <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <div className="flex items-center gap-2">
             <Sliders className="size-5 text-primary" />
             <h3 className="text-lg font-display font-medium text-foreground">
-              Studio Notification System Rules
+              הגדרות התראות סטודיו — אליאל ביוטי
             </h3>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button
               size="sm"
-              className="rounded-full gap-1.5 text-xs shadow-sm bg-primary text-primary-foreground hover:bg-primary/90"
+              className="rounded-full gap-1.5 text-xs shadow-sm bg-primary text-primary-foreground hover:bg-primary/90 font-medium cursor-pointer"
               onClick={handleSendTestEmail}
               disabled={isSendingTest}
             >
-              {isSendingTest ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
-              Send Test Confirmation Email
+              {isSendingTest ? <Loader2 className="size-3.5 animate-spin ml-1" /> : <Send className="size-3.5 ml-1" />}
+              שליחת מייל אישור לדוגמה
             </Button>
             <Button
               size="sm"
               variant="outline"
-              className="rounded-full gap-1.5 text-xs"
+              className="rounded-full gap-1.5 text-xs font-medium cursor-pointer"
               onClick={handleTriggerProcessor}
               disabled={isProcessing}
             >
-              {isProcessing ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
-              Run Reminder Scheduler Now
+              {isProcessing ? <Loader2 className="size-3.5 animate-spin ml-1" /> : <RefreshCw className="size-3.5 ml-1" />}
+              הפעלת תזמון תזכורות עכשיו
             </Button>
           </div>
         </div>
         <p className="text-xs text-muted-foreground mb-6">
-          Global notification toggles for Lumière Nails. Disabling a notification here stops it studio-wide regardless of individual client preferences.
+          מתגי שליטה גלובליים עבור סטודיו אליאל ביוטי. כיבוי התראה כאן ישבית אותה בכל הסטודיו.
         </p>
 
         {isLoadingSettings ? (
           <div className="py-6 text-center text-muted-foreground">
-            <Loader2 className="size-5 animate-spin inline-block mr-2" />
-            Loading studio settings…
+            <Loader2 className="size-5 animate-spin inline-block ml-2" />
+            טוען הגדרות סטודיו…
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50">
                 <div>
-                  <Label className="text-sm font-medium">Appointment Confirmation</Label>
-                  <p className="text-xs text-muted-foreground">Sent upon booking creation</p>
+                  <Label className="text-sm font-medium">אישור תור אוטומטי</Label>
+                  <p className="text-xs text-muted-foreground">נשלח מיד עם קביעת התור ע"י הלקוחה</p>
                 </div>
                 <Switch
                   checked={settings?.appointment_confirmation ?? true}
@@ -305,8 +310,8 @@ export function AdminNotificationSettings() {
 
               <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50">
                 <div>
-                  <Label className="text-sm font-medium">Cancellation Notification</Label>
-                  <p className="text-xs text-muted-foreground">Sent when appointment is canceled</p>
+                  <Label className="text-sm font-medium">הודעת ביטול תור</Label>
+                  <p className="text-xs text-muted-foreground">נשלחת כאשר תור מבוטל</p>
                 </div>
                 <Switch
                   checked={settings?.appointment_cancellation ?? true}
@@ -318,8 +323,8 @@ export function AdminNotificationSettings() {
             <div className="space-y-4">
               <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50">
                 <div>
-                  <Label className="text-sm font-medium">24-Hour Reminder</Label>
-                  <p className="text-xs text-muted-foreground">Automatic reminder 1 day prior</p>
+                  <Label className="text-sm font-medium">תזכורת 24 שעות לפני</Label>
+                  <p className="text-xs text-muted-foreground">תזכורת אוטומטית יום לפני המועד</p>
                 </div>
                 <Switch
                   checked={settings?.appointment_reminder_24h ?? true}
@@ -329,8 +334,8 @@ export function AdminNotificationSettings() {
 
               <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50">
                 <div>
-                  <Label className="text-sm font-medium">1-Hour Reminder</Label>
-                  <p className="text-xs text-muted-foreground">Automatic reminder 1 hour prior</p>
+                  <Label className="text-sm font-medium">תזכורת שעה לפני</Label>
+                  <p className="text-xs text-muted-foreground">תזכורת אוטומטית שעה לפני תחילת התור</p>
                 </div>
                 <Switch
                   checked={settings?.appointment_reminder_1h ?? true}
@@ -342,31 +347,31 @@ export function AdminNotificationSettings() {
             {/* Timezone and window config */}
             <div className="md:col-span-2 pt-2 flex flex-col sm:flex-row gap-4 text-xs text-muted-foreground bg-muted/20 p-4 rounded-xl border border-border/40">
               <div className="flex items-center gap-2">
-                <Globe className="size-4 text-primary" />
-                <span>Timezone: <strong>{settings?.timezone || "Asia/Jerusalem"}</strong></span>
+                <Globe className="size-4 text-primary ml-1" />
+                <span>אזור זמן: <strong>{settings?.timezone || "Asia/Jerusalem"}</strong></span>
               </div>
               <div className="flex items-center gap-2">
-                <Clock className="size-4 text-primary" />
-                <span>24h Reminder Window: <strong>±{settings?.reminder_24h_window_minutes || 10} min</strong></span>
+                <Clock className="size-4 text-primary ml-1" />
+                <span>חלון תזכורת 24 שעות: <strong>±{settings?.reminder_24h_window_minutes || 10} דק'</strong></span>
               </div>
               <div className="flex items-center gap-2">
-                <Clock className="size-4 text-primary" />
-                <span>1h Reminder Window: <strong>±{settings?.reminder_1h_window_minutes || 10} min</strong></span>
+                <Clock className="size-4 text-primary ml-1" />
+                <span>חלון תזכורת שעה לפני: <strong>±{settings?.reminder_1h_window_minutes || 10} דק'</strong></span>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Notification Logs History & Duplicate Prevention Inspector */}
+      {/* Notification Logs History */}
       <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
           <div>
             <h3 className="text-lg font-display font-medium text-foreground">
-              Notification History & Delivery Logs
+              היסטוריית התראות ויומן משלוחים
             </h3>
             <p className="text-xs text-muted-foreground">
-              Immutable audit log of all notification attempts with idempotent duplicate prevention.
+              יומן מעקב מלא אחר כל ההתראות שנשלחו עם מנגנון מניעת כפילויות.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -375,10 +380,10 @@ export function AdminNotificationSettings() {
               onChange={(e) => setStatusFilter(e.target.value as "all" | "pending" | "sent" | "failed" | "skipped")}
               className="text-xs bg-muted/60 border border-border rounded-lg px-2.5 py-1.5"
             >
-              <option value="all">All Statuses</option>
-              <option value="sent">Sent</option>
-              <option value="failed">Failed</option>
-              <option value="skipped">Skipped</option>
+              <option value="all">כל הסטטוסים</option>
+              <option value="sent">נשלח</option>
+              <option value="failed">נכשל</option>
+              <option value="skipped">דולג</option>
             </select>
             <Button
               size="sm"
@@ -393,43 +398,51 @@ export function AdminNotificationSettings() {
 
         {isLoadingLogs ? (
           <div className="py-12 text-center text-muted-foreground">
-            <Loader2 className="size-5 animate-spin inline-block mr-2" />
-            Loading logs…
+            <Loader2 className="size-5 animate-spin inline-block ml-2" />
+            טוען יומן התראות…
           </div>
         ) : !logs || logs.length === 0 ? (
           <div className="py-12 text-center text-muted-foreground text-sm border border-dashed border-border rounded-xl">
-            No notification logs found.
+            לא נמצאו רשומות ביומן התראות.
           </div>
         ) : (
           <div className="overflow-x-auto rounded-xl border border-border/60">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[140px]">Time</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Channel</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Provider ID / Error</TableHead>
-                  <TableHead className="w-[120px]">Appointment</TableHead>
+                  <TableHead className="w-[140px] text-right">זמן</TableHead>
+                  <TableHead className="text-right">סוג התראה</TableHead>
+                  <TableHead className="text-right">ערוץ</TableHead>
+                  <TableHead className="text-right">סטטוס</TableHead>
+                  <TableHead className="text-right">מזהה ספק / שגיאה</TableHead>
+                  <TableHead className="w-[120px] text-right">מזהה תור</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {logs.map((log) => (
                   <TableRow key={log.id} className="text-xs">
                     <TableCell className="font-mono text-muted-foreground">
-                      {new Date(log.created_at).toLocaleString([], {
-                        month: "short",
+                      {new Date(log.created_at).toLocaleString("he-IL", {
+                        month: "numeric",
                         day: "numeric",
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
                     </TableCell>
                     <TableCell className="font-medium text-foreground">
-                      {log.type.replace(/_/g, " ")}
+                      {log.type === "appointment_confirmation"
+                        ? "אישור תור"
+                        : log.type === "appointment_cancellation"
+                        ? "ביטול תור"
+                        : log.type === "appointment_reminder_24h"
+                        ? "תזכורת 24 שעות"
+                        : log.type === "appointment_reminder_1h"
+                        ? "תזכורת שעה לפני"
+                        : log.type}
                     </TableCell>
                     <TableCell>{getChannelBadge(log.channel)}</TableCell>
                     <TableCell>{getStatusBadge(log.status)}</TableCell>
-                    <TableCell className="max-w-[280px] truncate font-mono text-[11px] text-muted-foreground">
+                    <TableCell className="max-w-[280px] truncate font-mono text-[11px] text-muted-foreground" dir="ltr">
                       {log.provider_message_id ? (
                         <span className="text-emerald-700 font-semibold">ID: {log.provider_message_id}</span>
                       ) : log.error_message ? (
@@ -440,7 +453,7 @@ export function AdminNotificationSettings() {
                         "—"
                       )}
                     </TableCell>
-                    <TableCell className="font-mono text-[11px] text-muted-foreground">
+                    <TableCell className="font-mono text-[11px] text-muted-foreground" dir="ltr">
                       {log.appointment_id.slice(0, 8)}…
                     </TableCell>
                   </TableRow>

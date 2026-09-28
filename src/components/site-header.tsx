@@ -20,7 +20,7 @@ export function SiteHeader() {
     typeof user?.user_metadata?.["full_name"] === "string"
       ? user.user_metadata["full_name"]
       : undefined;
-  const displayName = profile?.full_name || metaFullName || user?.email?.split("@")[0] || "Account";
+  const displayName = profile?.full_name || metaFullName || user?.email?.split("@")[0] || "אזור אישי";
 
   const handleSignOut = async () => {
     await signOut();
@@ -32,13 +32,13 @@ export function SiteHeader() {
       <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 py-4">
         <Link to="/" className="flex min-w-0 items-center gap-2">
           <Sparkles className="size-5 shrink-0 text-primary" />
-          <span className="truncate font-display text-xl tracking-wide">Lumière Nails</span>
+          <span className="truncate font-display text-xl font-medium tracking-wide">אליאל ביוטי</span>
         </Link>
         <div className="flex shrink-0 items-center gap-3">
           {!isLoading && (
             <>
               {user ? (
-                <DropdownMenu>
+                <DropdownMenu dir="rtl">
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="outline"
@@ -53,7 +53,7 @@ export function SiteHeader() {
                       </span>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 p-1.5">
+                  <DropdownMenuContent align="end" className="w-56 p-1.5 text-right">
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none truncate">{displayName}</p>
@@ -66,14 +66,14 @@ export function SiteHeader() {
                     <DropdownMenuItem asChild>
                       <Link to="/my-bookings" className="flex items-center gap-2 w-full">
                         <Calendar className="size-4 text-muted-foreground" />
-                        <span>My appointments</span>
+                        <span>התורים שלי</span>
                       </Link>
                     </DropdownMenuItem>
                     {isAdmin && (
                       <DropdownMenuItem asChild>
                         <Link to="/dashboard" className="flex items-center gap-2 w-full">
                           <LayoutDashboard className="size-4 text-muted-foreground" />
-                          <span>Studio dashboard</span>
+                          <span>ניהול סטודיו</span>
                         </Link>
                       </DropdownMenuItem>
                     )}
@@ -83,20 +83,20 @@ export function SiteHeader() {
                       className="text-destructive focus:text-destructive flex items-center gap-2"
                     >
                       <LogOut className="size-4" />
-                      <span>Sign out</span>
+                      <span>התנתקות</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
                 <Button asChild variant="ghost" size="sm" className="rounded-full">
-                  <Link to="/auth">Sign in</Link>
+                  <Link to="/auth">התחברות</Link>
                 </Button>
               )}
             </>
           )}
 
           <Button asChild size="sm" className="rounded-full px-5">
-            <Link to="/book">Book now</Link>
+            <Link to="/book">קביעת תור</Link>
           </Button>
         </div>
       </div>

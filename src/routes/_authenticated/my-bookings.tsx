@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
+import { he } from "date-fns/locale";
 import { ArrowLeft, Calendar, Clock, Loader2, Sparkles, XCircle, PlusCircle, Bell } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -30,8 +31,8 @@ export const Route = createFileRoute("/_authenticated/my-bookings")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "My Appointments — Lumière Nails" },
-      { name: "description", content: "View and manage your upcoming and past salon bookings." },
+      { title: "התורים שלי — אליאל ביוטי" },
+      { name: "description", content: "צפייה וניהול התורים שלך בסטודיו אליאל ביוטי." },
     ],
   }),
   component: MyBookingsPage,
@@ -51,15 +52,15 @@ type Appointment = {
 
 function getBadge(status: string): { label: string; className: string } {
   if (status === "confirmed") {
-    return { label: "Confirmed", className: "bg-primary/15 text-primary border-primary/20" };
+    return { label: "מאושר", className: "bg-primary/15 text-primary border-primary/20" };
   }
   if (status === "canceled") {
     return {
-      label: "Canceled",
+      label: "מבוטל",
       className: "bg-destructive/10 text-destructive border-destructive/20",
     };
   }
-  return { label: "Pending", className: "bg-secondary text-secondary-foreground" };
+  return { label: "ממתין לאישור", className: "bg-secondary text-secondary-foreground" };
 }
 
 function MyBookingsPage() {
@@ -93,13 +94,13 @@ function MyBookingsPage() {
       return id;
     },
     onSuccess: (canceledId) => {
-      toast.success("Appointment canceled");
+      toast.success("התור בוטל בהצלחה");
       void dispatchAppointmentNotification(canceledId, "appointment_cancellation");
       setCancelingAppointment(null);
       void queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
     },
     onError: () => {
-      toast.error("Could not cancel the appointment. Please contact the studio.");
+      toast.error("לא ניתן היה לבטל את התור. אנא צרי קשר עם הסטודיו.");
     },
   });
 
@@ -111,20 +112,20 @@ function MyBookingsPage() {
   const past = bookings.filter((b) => b.appointment_date < todayKey || b.status === "canceled");
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background text-right" dir="rtl">
       <SiteHeader />
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-5 py-10">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-6">
           <div>
-            <h1 className="text-3xl font-display sm:text-4xl">My appointments</h1>
+            <h1 className="text-3xl font-display sm:text-4xl font-medium">התורים שלי</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Track your scheduled visits and appointment status.
+              מעקב אחר תורים מתוכננים והיסטוריית ביקורים.
             </p>
           </div>
-          <Button asChild className="rounded-full shadow-sm">
-            <Link to="/book">
-              <PlusCircle className="size-4 mr-2" /> Book new appointment
+          <Button asChild className="rounded-full shadow-sm font-medium">
+            <Link to="/book" className="flex items-center gap-2">
+              <PlusCircle className="size-4" /> קביעת תור חדש
             </Link>
           </Button>
         </div>
@@ -135,33 +136,33 @@ function MyBookingsPage() {
               value="bookings"
               className="rounded-full px-5 py-2 text-xs font-medium gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
             >
-              <Calendar className="size-3.5" /> Scheduled Visits
+              <Calendar className="size-3.5 ml-1" /> תורים מוזמנים
             </TabsTrigger>
             <TabsTrigger
               value="notifications"
               className="rounded-full px-5 py-2 text-xs font-medium gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
             >
-              <Bell className="size-3.5" /> Notification Settings
+              <Bell className="size-3.5 ml-1" /> הגדרות התראות
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="bookings">
             {bookingsQuery.isLoading ? (
           <div className="flex items-center justify-center py-20 text-muted-foreground">
-            <Loader2 className="size-6 animate-spin mr-2" />
-            <span>Loading your appointments…</span>
+            <Loader2 className="size-6 animate-spin ml-2" />
+            <span>טוען את התורים שלך…</span>
           </div>
         ) : bookings.length === 0 ? (
           <div className="mt-12 rounded-3xl border border-dashed border-border bg-card/50 p-12 text-center">
             <div className="mx-auto size-14 rounded-full bg-primary/10 grid place-items-center text-primary mb-4">
               <Calendar className="size-7" />
             </div>
-            <h2 className="text-2xl font-display">No appointments yet</h2>
+            <h2 className="text-2xl font-display font-medium">עדיין אין תורים מוזמנים</h2>
             <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-              Treat your nails with our professional gel manicure and pedicure services.
+              פנקי את הציפורניים שלך במניקור ג'ל ופדיקור מקצועיים.
             </p>
-            <Button asChild className="mt-6 rounded-full px-6">
-              <Link to="/book">Book your first visit</Link>
+            <Button asChild className="mt-6 rounded-full px-6 font-medium">
+              <Link to="/book">לקביעת התור הראשון שלך</Link>
             </Button>
           </div>
         ) : (
@@ -169,12 +170,14 @@ function MyBookingsPage() {
             {upcoming.length > 0 && (
               <section>
                 <h2 className="text-xl font-medium mb-4 flex items-center gap-2">
-                  <Clock className="size-5 text-primary" />
-                  Upcoming appointments ({upcoming.length})
+                  <Clock className="size-5 text-primary ml-1" />
+                  תורים קרובים ({upcoming.length})
                 </h2>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {upcoming.map((item) => {
-                    const serviceInfo = SERVICES.find((s) => s.id === item.service_type);
+                    const serviceInfo = SERVICES.find(
+                      (s) => s.id === item.service_type || s.name === item.service_type,
+                    );
                     const badge = getBadge(item.status);
                     return (
                       <div
@@ -195,10 +198,11 @@ function MyBookingsPage() {
                           </div>
                           <div className="mt-3 flex items-center gap-3 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1.5 font-medium text-foreground">
-                              <Calendar className="size-4 text-primary" />
+                              <Calendar className="size-4 text-primary ml-1" />
                               {format(
                                 new Date(`${item.appointment_date}T00:00:00`),
-                                "EEEE, d MMM yyyy",
+                                "EEEE, d בMMMM yyyy",
+                                { locale: he },
                               )}
                             </span>
                             <span>•</span>
@@ -218,14 +222,14 @@ function MyBookingsPage() {
                           )}
                         </div>
 
-                        <div className="mt-5 pt-4 border-t border-border/50 flex justify-end">
+                        <div className="mt-5 pt-4 border-t border-border/50 flex justify-start">
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive text-xs"
+                            className="rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive text-xs cursor-pointer"
                             onClick={() => setCancelingAppointment(item)}
                           >
-                            <XCircle className="size-3.5 mr-1.5" /> Cancel appointment
+                            <XCircle className="size-3.5 ml-1.5" /> ביטול תור
                           </Button>
                         </div>
                       </div>
@@ -238,11 +242,13 @@ function MyBookingsPage() {
             {past.length > 0 && (
               <section>
                 <h2 className="text-xl font-medium mb-4 text-muted-foreground">
-                  Past &amp; canceled ({past.length})
+                  תורים קודמים ומבוטלים ({past.length})
                 </h2>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {past.map((item) => {
-                    const serviceInfo = SERVICES.find((s) => s.id === item.service_type);
+                    const serviceInfo = SERVICES.find(
+                      (s) => s.id === item.service_type || s.name === item.service_type,
+                    );
                     const badge = getBadge(item.status);
                     return (
                       <div
@@ -261,8 +267,10 @@ function MyBookingsPage() {
                           </Badge>
                         </div>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {format(new Date(`${item.appointment_date}T00:00:00`), "d MMM yyyy")} at{" "}
-                          {item.appointment_time.slice(0, 5)}
+                          {format(new Date(`${item.appointment_date}T00:00:00`), "d בMMMM yyyy", {
+                            locale: he,
+                          })}{" "}
+                          בשעה {item.appointment_time.slice(0, 5)}
                         </p>
                       </div>
                     );
@@ -283,27 +291,29 @@ function MyBookingsPage() {
           open={Boolean(cancelingAppointment)}
           onOpenChange={() => setCancelingAppointment(null)}
         >
-          <AlertDialogContent className="rounded-3xl">
+          <AlertDialogContent className="rounded-3xl text-right" dir="rtl">
             <AlertDialogHeader>
-              <AlertDialogTitle>Cancel appointment?</AlertDialogTitle>
+              <AlertDialogTitle>לבטל את התור?</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to cancel your appointment for{" "}
+                האם את בטוחה שברצונך לבטל את התור ל-{" "}
                 <span className="font-semibold text-foreground">
-                  {cancelingAppointment?.service_type} on {cancelingAppointment?.appointment_date}{" "}
-                  at {cancelingAppointment?.appointment_time.slice(0, 5)}
+                  {SERVICES.find((s) => s.id === cancelingAppointment?.service_type)?.name ||
+                    cancelingAppointment?.service_type}{" "}
+                  בתאריך {cancelingAppointment?.appointment_date} בשעה{" "}
+                  {cancelingAppointment?.appointment_time.slice(0, 5)}
                 </span>
-                ? You will need to re-book if you change your mind.
+                ? אם תשני את דעתך, יהיה עלייך לקבוע תור מחדש.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="rounded-full">Keep appointment</AlertDialogCancel>
+            <AlertDialogFooter className="flex-row-reverse justify-start gap-2">
+              <AlertDialogCancel className="rounded-full">השארת התור</AlertDialogCancel>
               <AlertDialogAction
                 className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 onClick={() => {
                   if (cancelingAppointment) cancelMutation.mutate(cancelingAppointment.id);
                 }}
               >
-                Yes, cancel
+                כן, בטלי תור
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

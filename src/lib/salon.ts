@@ -9,52 +9,52 @@ export type Service = {
 export const SERVICES: Service[] = [
   {
     id: "Gel Polish",
-    name: "Gel Polish",
+    name: "לק ג'ל",
     price: "₪140",
-    duration: "60 min",
+    duration: "60 דק'",
     description:
-      "Classic gel manicure with shaping, cuticle care and a long-lasting glossy finish.",
+      "מניקור קלאסי יסודי כולל סידור ועיצוב הציפורן, טיפוח הקוטיקולה ומריחת לק ג'ל מבריק ועמיד.",
   },
   {
     id: "Structure Gel",
-    name: "Structure Gel",
+    name: "מבנה אנטומי",
     price: "₪200",
-    duration: "90 min",
-    description: "Reinforced natural nail with builder gel for strength, shape and durability.",
+    duration: "90 דק'",
+    description: "חיזוק הציפורן הטבעית בראבר/ביילדר ג'ל למבנה מושלם, עמידות מקסימלית וחוזק.",
   },
   {
     id: "Gel Extensions",
-    name: "Gel Extensions",
+    name: "בנייה בג'ל",
     price: "₪250",
-    duration: "120 min",
-    description: "Full length extensions sculpted to your preferred shape and finished in gel.",
+    duration: "120 דק'",
+    description: "הארכת ציפורניים מלאה במבנה ובצורה המועדפת עלייך בגימור ג'ל יוקרתי.",
   },
   {
     id: "Pedicure",
-    name: "Pedicure",
+    name: "פדיקור",
     price: "₪160",
-    duration: "60 min",
-    description: "Relaxing spa pedicure with exfoliation, nail care and gel colour.",
+    duration: "60 דק'",
+    description: "פדיקור ספא מפנק ומרגיע כולל פילינג, טיפוח כף הרגל וציפורניים ומריחת ג'ל.",
   },
   {
     id: "Soak Off & Care",
-    name: "Soak Off & Care",
+    name: "הסרה וטיפוח",
     price: "₪70",
-    duration: "30 min",
-    description: "Gentle gel removal with nourishing treatment for tired nails.",
+    duration: "30 דק'",
+    description: "הסרה עדינה ומקצועית של הג'ל עם טיפול שיקום והזנה לציפורניים.",
   },
 ];
 
 export const SLOT_MINUTES = 45;
 
 export const DAY_NAMES = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
+  "ראשון",
+  "שני",
+  "שלישי",
+  "רביעי",
+  "חמישי",
+  "שישי",
+  "שבת",
 ];
 
 /** "09:00:00" | "09:00" -> "09:00" */

@@ -26,7 +26,7 @@ export class ResendEmailProvider implements EmailProvider {
       defaultFrom ||
       process.env["RESEND_FROM_EMAIL"] ||
       process.env["SMTP_FROM"] ||
-      "Lumière Nails <onboarding@resend.dev>";
+      "אליאל ביוטי <onboarding@resend.dev>";
     this.maxRetries = maxRetries;
   }
 
@@ -75,10 +75,10 @@ export class ResendEmailProvider implements EmailProvider {
           if (
             (response.status === 403 || response.status === 422) &&
             data.message?.toLowerCase().includes("not verified") &&
-            payload.from !== "Lumière Nails <onboarding@resend.dev>"
+            payload.from !== "אליאל ביוטי <onboarding@resend.dev>"
           ) {
             console.warn(`[Resend] Domain ${payload.from} unverified, falling back to onboarding@resend.dev`);
-            payload.from = "Lumière Nails <onboarding@resend.dev>";
+            payload.from = "אליאל ביוטי <onboarding@resend.dev>";
             continue;
           }
 

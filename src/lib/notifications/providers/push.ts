@@ -28,7 +28,7 @@ export class WebPushProvider implements PushProvider {
   private vapidPrivateKey: string;
 
   constructor(vapidSubject?: string, vapidPublicKey?: string, vapidPrivateKey?: string) {
-    this.vapidSubject = vapidSubject || process.env["VAPID_SUBJECT"] || "mailto:admin@lumierenails.com";
+    this.vapidSubject = vapidSubject || process.env["VAPID_SUBJECT"] || "mailto:admin@elielbeauty.co.il";
     this.vapidPublicKey = vapidPublicKey || process.env["VAPID_PUBLIC_KEY"] || "";
     this.vapidPrivateKey = vapidPrivateKey || process.env["VAPID_PRIVATE_KEY"] || "";
   }

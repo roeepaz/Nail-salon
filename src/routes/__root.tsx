@@ -18,16 +18,16 @@ function NotFoundComponent() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-light text-primary">404</h1>
-        <h2 className="mt-4 text-xl text-foreground">Page not found</h2>
+        <h2 className="mt-4 text-xl text-foreground">העמוד לא נמצא</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+          העמוד שחיפשת אינו קיים או שהועבר למקום אחר.
         </p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Go home
+            חזרה לדף הבית
           </Link>
         </div>
       </div>
@@ -41,9 +41,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-xl tracking-tight text-foreground">This page didn't load</h1>
+        <h1 className="text-xl tracking-tight text-foreground">העמוד לא נטען</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          משהו השתבש בצד שלנו. אפשר לנסות לרענן או לחזור לדף הבית.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -53,13 +53,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             }}
             className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Try again
+            לנסות שוב
           </button>
           <a
             href="/"
             className="inline-flex items-center justify-center rounded-full border border-input bg-background px-6 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Go home
+            חזרה לדף הבית
           </a>
         </div>
       </div>
@@ -72,12 +72,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lumière Nails — Gel Polish Studio" },
+      { title: "אליאל ביוטי — סטודיו לציפורניים וטיפוח" },
       {
         name: "description",
-        content: "Boutique gel polish studio. Book your manicure or pedicure online in seconds.",
+        content: "אליאל ביוטי - סטודיו בוטיק ללק ג'ל, מבנה אנטומי ופדיקור. הזמנת תור אונליין בקלות ובמהירות.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:title", content: "אליאל ביוטי — סטודיו לציפורניים וטיפוח" },
+      {
+        property: "og:description",
+        content: "אליאל ביוטי - סטודיו בוטיק ללק ג'ל, מבנה אנטומי ופדיקור. הזמנת תור אונליין.",
+      },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
@@ -86,7 +91,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Jost:wght@300;400;500;600&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700&family=Rubik:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@300;400;500;600&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
@@ -99,7 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="he" dir="rtl">
       <head>
         <HeadContent />
       </head>

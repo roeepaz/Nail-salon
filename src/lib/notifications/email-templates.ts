@@ -11,23 +11,25 @@ export interface AppointmentEmailData {
   supportPhone?: string;
 }
 
-const DEFAULT_LOCATION = "Lumière Nails Studio, 120 Dizengoff St, Tel Aviv";
-const DEFAULT_PHONE = "+972 50-123-4567";
+const DEFAULT_LOCATION = "סטודיו אליאל ביוטי, רחוב דיזנגוף 120, תל אביב";
+const DEFAULT_PHONE = "050-123-4567";
 
 function baseEmailLayout(content: string, previewText: string): string {
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="he" dir="rtl">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lumière Nails</title>
+  <title>אליאל ביוטי</title>
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-family: 'Assistant', 'Rubik', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       background-color: #fcf9f9;
       color: #2b2325;
       margin: 0;
       padding: 0;
+      direction: rtl;
+      text-align: right;
       -webkit-font-smoothing: antialiased;
     }
     .wrapper {
@@ -48,20 +50,19 @@ function baseEmailLayout(content: string, previewText: string): string {
     .header h1 {
       margin: 0;
       font-size: 26px;
-      letter-spacing: 2px;
-      font-weight: 400;
-      font-family: 'Georgia', serif;
+      letter-spacing: 1px;
+      font-weight: 700;
       color: #f7dcdb;
     }
     .header p {
       margin: 6px 0 0 0;
       font-size: 13px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
       color: #dfb2b0;
     }
     .content {
       padding: 36px 32px;
+      direction: rtl;
+      text-align: right;
     }
     .card {
       background: #fff8f8;
@@ -73,6 +74,7 @@ function baseEmailLayout(content: string, previewText: string): string {
     .detail-row {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       padding: 10px 0;
       border-bottom: 1px solid #f6dedf;
       font-size: 14px;
@@ -86,7 +88,7 @@ function baseEmailLayout(content: string, previewText: string): string {
     .detail-value {
       font-weight: 600;
       color: #2b2325;
-      text-align: right;
+      text-align: left;
     }
     .cta-button {
       display: inline-block;
@@ -117,17 +119,17 @@ function baseEmailLayout(content: string, previewText: string): string {
   </div>
   <div class="wrapper">
     <div class="header">
-      <h1>LUMIÈRE NAILS</h1>
-      <p>Gel Polish Studio</p>
+      <h1>אליאל ביוטי</h1>
+      <p>סטודיו לציפורניים וטיפוח בוטיק</p>
     </div>
     <div class="content">
       ${content}
     </div>
     <div class="footer">
-      <p>Lumière Nails Studio • ${DEFAULT_LOCATION}</p>
-      <p>Questions or need to reschedule? Contact us at ${DEFAULT_PHONE}</p>
+      <p>סטודיו אליאל ביוטי • ${DEFAULT_LOCATION}</p>
+      <p>לשאלות או שינוי מועד, צרו עמנו קשר בטלפון: ${DEFAULT_PHONE}</p>
       <p style="margin-top: 12px; font-size: 11px; color: #b3a4a6;">
-        This is an automated notification regarding your appointment reservation.
+        הודעה אוטומטית זו נשלחה בעקבות קביעת תור בסטודיו אליאל ביוטי.
       </p>
     </div>
   </div>
@@ -136,171 +138,171 @@ function baseEmailLayout(content: string, previewText: string): string {
 }
 
 export function getConfirmationEmail(data: AppointmentEmailData): { subject: string; html: string } {
-  const subject = "Appointment confirmed";
+  const subject = `התור שלך אושר! ✨ | אליאל ביוטי`;
   const content = `
-    <h2 style="margin: 0 0 12px; font-size: 22px; font-weight: 600; color: #2b2325;">Appointment Confirmed! ✨</h2>
+    <h2 style="margin: 0 0 12px; font-size: 22px; font-weight: 600; color: #2b2325;">התור שלך אושר בהצלחה! ✨</h2>
     <p style="margin: 0 0 16px; font-size: 15px; color: #524447; line-height: 1.5;">
-      Hi <strong>${data.customerName}</strong>,<br>
-      Your appointment at Lumière Nails has been confirmed. We look forward to pampering your nails!
+      שלום <strong>${data.customerName}</strong>,<br>
+      שמחים לעדכן שהתור שלך בסטודיו <strong>אליאל ביוטי</strong> אושר. אנחנו מחכים לפנק אותך!
     </p>
 
     <div class="card">
       <div class="detail-row">
-        <span class="detail-label">Service</span>
+        <span class="detail-label">סוג הטיפול</span>
         <span class="detail-value">${data.serviceName}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">Date</span>
+        <span class="detail-label">תאריך</span>
         <span class="detail-value">${data.date}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">Time</span>
+        <span class="detail-label">שעה</span>
         <span class="detail-value">${data.time}</span>
       </div>
       ${data.duration ? `
       <div class="detail-row">
-        <span class="detail-label">Duration</span>
+        <span class="detail-label">משך הטיפול</span>
         <span class="detail-value">${data.duration}</span>
       </div>` : ""}
       ${data.price ? `
       <div class="detail-row">
-        <span class="detail-label">Price</span>
+        <span class="detail-label">מחיר</span>
         <span class="detail-value">${data.price}</span>
       </div>` : ""}
       <div class="detail-row">
-        <span class="detail-label">Location</span>
+        <span class="detail-label">כתובת הסטודיו</span>
         <span class="detail-value">${data.location || DEFAULT_LOCATION}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">Booking Reference</span>
+        <span class="detail-label">מספר הזמנה</span>
         <span class="detail-value" style="font-family: monospace; font-size: 13px;">${data.bookingId.slice(0, 8).toUpperCase()}</span>
       </div>
     </div>
 
     <p style="font-size: 13px; color: #7d6b6e; line-height: 1.6; margin: 16px 0;">
-      <strong>Studio Policy:</strong> Please arrive 5 minutes prior to your scheduled time. If you need to reschedule or cancel, please let us know at least 24 hours in advance.
+      <strong>מדיניות הסטודיו:</strong> מומלץ להגיע כ-5 דקות לפני שעת התור. במידה וברצונך לשנות או לבטל את התור, נודה לעדכון של 24 שעות מראש לפחות.
     </p>
   `;
 
   return {
     subject,
-    html: baseEmailLayout(content, `Your appointment for ${data.serviceName} on ${data.date} at ${data.time} is confirmed!`),
+    html: baseEmailLayout(content, `התור שלך לטיפול ${data.serviceName} בתאריך ${data.date} בשעה ${data.time} אושר!`),
   };
 }
 
 export function get24hReminderEmail(data: AppointmentEmailData): { subject: string; html: string } {
-  const subject = "Reminder: Your appointment is tomorrow";
+  const subject = `תזכורת: התור שלך מחר ב-${data.time} 💅 | אליאל ביוטי`;
   const content = `
-    <h2 style="margin: 0 0 12px; font-size: 22px; font-weight: 600; color: #2b2325;">Your appointment is tomorrow! 💅</h2>
+    <h2 style="margin: 0 0 12px; font-size: 22px; font-weight: 600; color: #2b2325;">התור שלך מחר! 💅</h2>
     <p style="margin: 0 0 16px; font-size: 15px; color: #524447; line-height: 1.5;">
-      Hi <strong>${data.customerName}</strong>,<br>
-      This is a friendly reminder that your nail appointment is scheduled for tomorrow.
+      שלום <strong>${data.customerName}</strong>,<br>
+      תזכורת ידידותית לכך שמחר נקבע לך תור בסטודיו אליאל ביוטי.
     </p>
 
     <div class="card">
       <div class="detail-row">
-        <span class="detail-label">Service</span>
+        <span class="detail-label">סוג הטיפול</span>
         <span class="detail-value">${data.serviceName}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">Date</span>
+        <span class="detail-label">תאריך</span>
         <span class="detail-value">${data.date}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">Time</span>
+        <span class="detail-label">שעה</span>
         <span class="detail-value">${data.time}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">Location</span>
+        <span class="detail-label">כתובת הסטודיו</span>
         <span class="detail-value">${data.location || DEFAULT_LOCATION}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">Booking ID</span>
+        <span class="detail-label">מספר הזמנה</span>
         <span class="detail-value" style="font-family: monospace;">${data.bookingId.slice(0, 8).toUpperCase()}</span>
       </div>
     </div>
 
     <p style="font-size: 13px; color: #7d6b6e; line-height: 1.6; margin: 16px 0;">
-      Please arrive on time so we can provide you with the best personalized service. We can't wait to see you!
+      נא להגיע בזמן כדי שנוכל להעניק לך את הטיפול המושלם והמפנק ביותר. מתרגשים לראותך!
     </p>
   `;
 
   return {
     subject,
-    html: baseEmailLayout(content, `Reminder: Your appointment for ${data.serviceName} is tomorrow at ${data.time}.`),
+    html: baseEmailLayout(content, `תזכורת: התור שלך לטיפול ${data.serviceName} נקבע למחר בשעה ${data.time}.`),
   };
 }
 
 export function get1hReminderEmail(data: AppointmentEmailData): { subject: string; html: string } {
-  const subject = "Reminder: Your appointment is in 1 hour";
+  const subject = `נתראה בעוד שעה! 🌸 | אליאל ביוטי`;
   const content = `
-    <h2 style="margin: 0 0 12px; font-size: 22px; font-weight: 600; color: #2b2325;">See you in 1 hour! 🌸</h2>
+    <h2 style="margin: 0 0 12px; font-size: 22px; font-weight: 600; color: #2b2325;">נתראה בעוד שעה! 🌸</h2>
     <p style="margin: 0 0 16px; font-size: 15px; color: #524447; line-height: 1.5;">
-      Hi <strong>${data.customerName}</strong>,<br>
-      Your appointment at Lumière Nails begins in approximately 1 hour at <strong>${data.time}</strong>.
+      שלום <strong>${data.customerName}</strong>,<br>
+      התור שלך בסטודיו <strong>אליאל ביוטי</strong> יחל בעוד כשעה, בשעה <strong>${data.time}</strong>.
     </p>
 
     <div class="card">
       <div class="detail-row">
-        <span class="detail-label">Service</span>
+        <span class="detail-label">סוג הטיפול</span>
         <span class="detail-value">${data.serviceName}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">Time</span>
+        <span class="detail-label">שעה</span>
         <span class="detail-value">${data.time}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">Location</span>
+        <span class="detail-label">כתובת הסטודיו</span>
         <span class="detail-value">${data.location || DEFAULT_LOCATION}</span>
       </div>
     </div>
 
     <p style="font-size: 13px; color: #7d6b6e; line-height: 1.6; margin: 16px 0;">
-      We're getting everything ready for your arrival. If you're running late, please call us at ${DEFAULT_PHONE}.
+      אנחנו כבר מכינים את העמדה עבורך. אם במקרה יש עיכוב בדרך, נשמח לעדכון בטלפון ${DEFAULT_PHONE}.
     </p>
   `;
 
   return {
     subject,
-    html: baseEmailLayout(content, `Reminder: Your appointment for ${data.serviceName} is in 1 hour at ${data.time}.`),
+    html: baseEmailLayout(content, `תזכורת: התור שלך לטיפול ${data.serviceName} יתחיל בעוד שעה בשעה ${data.time}.`),
   };
 }
 
 export function getCancellationEmail(data: AppointmentEmailData): { subject: string; html: string } {
-  const subject = "Appointment cancelled";
+  const subject = `התור בוטל | אליאל ביוטי`;
   const content = `
-    <h2 style="margin: 0 0 12px; font-size: 22px; font-weight: 600; color: #2b2325;">Appointment Cancelled</h2>
+    <h2 style="margin: 0 0 12px; font-size: 22px; font-weight: 600; color: #2b2325;">התור בוטל</h2>
     <p style="margin: 0 0 16px; font-size: 15px; color: #524447; line-height: 1.5;">
-      Hi <strong>${data.customerName}</strong>,<br>
-      Your appointment scheduled for <strong>${data.date} at ${data.time}</strong> has been cancelled.
+      שלום <strong>${data.customerName}</strong>,<br>
+      התור שנקבע לתאריך <strong>${data.date} בשעה ${data.time}</strong> בוטל.
     </p>
 
     <div class="card">
       <div class="detail-row">
-        <span class="detail-label">Service</span>
+        <span class="detail-label">סוג הטיפול</span>
         <span class="detail-value">${data.serviceName}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">Scheduled Date</span>
+        <span class="detail-label">תאריך שנקבע</span>
         <span class="detail-value">${data.date}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">Scheduled Time</span>
+        <span class="detail-label">שעה שנקבעה</span>
         <span class="detail-value">${data.time}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">Booking Reference</span>
+        <span class="detail-label">מספר הזמנה</span>
         <span class="detail-value" style="font-family: monospace;">${data.bookingId.slice(0, 8).toUpperCase()}</span>
       </div>
     </div>
 
     <p style="font-size: 14px; color: #524447; line-height: 1.6; margin: 16px 0;">
-      Whenever you're ready to book another session, visit our booking portal or reach out to us directly.
+      נשמח לעמוד לרשותך לקביעת תור חדש בכל עת דרך האתר או ישירות מולנו בוואטסאפ.
     </p>
   `;
 
   return {
     subject,
-    html: baseEmailLayout(content, `Your appointment for ${data.serviceName} on ${data.date} has been cancelled.`),
+    html: baseEmailLayout(content, `התור שלך לטיפול ${data.serviceName} בתאריך ${data.date} בוטל.`),
   };
 }

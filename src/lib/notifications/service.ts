@@ -355,32 +355,32 @@ export class NotificationService {
     switch (type) {
       case "appointment_confirmation":
         return {
-          title: "Appointment Confirmed ✨",
-          body: `Hi ${customerName}, your appointment for ${serviceName} on ${date} at ${time} is confirmed!`,
+          title: "התור שלך אושר! ✨",
+          body: `שלום ${customerName}, התור לטיפול ${serviceName} בתאריך ${date} בשעה ${time} אושר!`,
           url: "/my-bookings",
           appointmentId,
           type,
         };
       case "appointment_reminder_24h":
         return {
-          title: "Appointment Reminder 💅",
-          body: `Reminder: You have an appointment tomorrow at ${time} for ${serviceName}.`,
+          title: "תזכורת לתור מחר 💅",
+          body: `תזכורת: יש לך תור מחר בשעה ${time} לטיפול ${serviceName}.`,
           url: "/my-bookings",
           appointmentId,
           type,
         };
       case "appointment_reminder_1h":
         return {
-          title: "Appointment in 1 Hour 🌸",
-          body: `Your ${serviceName} appointment is in 1 hour at ${time}. We can't wait to see you!`,
+          title: "התור שלך בעוד שעה 🌸",
+          body: `התור לטיפול ${serviceName} יתחיל בעוד שעה בשעה ${time}. נתראה בקרוב!`,
           url: "/my-bookings",
           appointmentId,
           type,
         };
       case "appointment_cancellation":
         return {
-          title: "Appointment Cancelled",
-          body: `Your appointment for ${serviceName} on ${date} at ${time} has been cancelled.`,
+          title: "התור בוטל",
+          body: `התור לטיפול ${serviceName} בתאריך ${date} בשעה ${time} בוטל.`,
           url: "/my-bookings",
           appointmentId,
           type,

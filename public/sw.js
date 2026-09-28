@@ -1,5 +1,5 @@
 // Service Worker for Web Push Notifications
-// Lumière Nails Appointment Notification System
+// אליאל ביוטי - מערכת התראות לתורים
 
 self.addEventListener("install", (event) => {
   // Activate immediately
@@ -12,8 +12,8 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("push", (event) => {
   let data = {
-    title: "Lumière Nails",
-    body: "You have a new appointment notification.",
+    title: "אליאל ביוטי",
+    body: "יש לך הודעה חדשה לגבי התור שלך.",
     url: "/my-bookings",
     type: "appointment_notification",
     appointmentId: null,
@@ -33,6 +33,8 @@ self.addEventListener("push", (event) => {
     icon: "/favicon.ico",
     badge: "/favicon.ico",
     vibrate: [100, 50, 100],
+    dir: "rtl",
+    lang: "he",
     data: {
       url: data.url || "/my-bookings",
       appointmentId: data.appointmentId,
@@ -41,7 +43,7 @@ self.addEventListener("push", (event) => {
     actions: [
       {
         action: "view",
-        title: "View appointment",
+        title: "צפייה בתור",
       },
     ],
   };

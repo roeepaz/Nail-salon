@@ -16,17 +16,17 @@ export interface NotificationResult {
 }
 
 export interface SendNotificationOptions {
-  userId?: string | null;
+  userId?: string | null | undefined;
   appointmentId: string;
   type: NotificationType;
-  channels?: NotificationChannel[];
-  recipientEmail?: string | null;
-  recipientPhone?: string | null;
-  customerName?: string;
-  serviceName?: string;
-  appointmentDate?: string;
-  appointmentTime?: string;
-  force?: boolean;
+  channels?: NotificationChannel[] | undefined;
+  recipientEmail?: string | null | undefined;
+  recipientPhone?: string | null | undefined;
+  customerName?: string | undefined;
+  serviceName?: string | undefined;
+  appointmentDate?: string | undefined;
+  appointmentTime?: string | undefined;
+  force?: boolean | undefined;
 }
 
 export interface AppointmentNotificationData {

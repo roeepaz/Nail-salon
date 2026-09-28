@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
+import { he } from "date-fns/locale";
 import { CalendarClock, LogOut, Plus, Sparkles, Trash2, Bell } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -40,15 +41,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminNotificationSettings } from "@/components/notifications/admin-notification-settings";
 import { dispatchAppointmentNotification } from "@/lib/notifications/dispatcher";
-import { DAY_NAMES, normalizeTime, toDateKey } from "@/lib/salon";
+import { DAY_NAMES, normalizeTime, toDateKey, SERVICES } from "@/lib/salon";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Studio dashboard — Lumière Nails" },
-      { name: "description", content: "Manage appointments, statuses and studio availability." },
-      { property: "og:title", content: "Studio dashboard — Lumière Nails" },
-      { property: "og:description", content: "Manage appointments and availability." },
+      { title: "לוח ניהול סטודיו — אליאל ביוטי" },
+      { name: "description", content: "ניהול תורים, סטטוסים ושעות פעילות הסטודיו." },
+      { property: "og:title", content: "לוח ניהול סטודיו — אליאל ביוטי" },
+      { property: "og:description", content: "ניהול תורים ושעות פעילות הסטודיו." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -72,6 +73,12 @@ const STATUS_STYLE: Record<string, string> = {
   canceled: "bg-destructive/10 text-destructive",
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  pending: "ממתין",
+  confirmed: "מאושר",
+  canceled: "מבוטל",
+};
+
 function Dashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -80,7 +87,7 @@ function Dashboard() {
 
   useEffect(() => {
     if (!isAuthLoading && !isAdmin) {
-      toast.error("Studio dashboard is restricted to admins.");
+      toast.error("גישה ללוח הניהול מוגבלת למנהלים בלבד.");
       void navigate({ to: "/my-bookings", replace: true });
     }
   }, [isAdmin, isAuthLoading, navigate]);
@@ -106,7 +113,7 @@ function Dashboard() {
       return { id, status };
     },
     onSuccess: (data) => {
-      toast.success("Status updated");
+      toast.success("סטטוס התור עודכן");
       if (data.status === "confirmed") {
         void dispatchAppointmentNotification(data.id, "appointment_confirmation");
       } else if (data.status === "canceled") {
@@ -114,7 +121,7 @@ function Dashboard() {
       }
       void queryClient.invalidateQueries({ queryKey: ["appointments"] });
     },
-    onError: () => toast.error("Could not update the status"),
+    onError: () => toast.error("לא ניתן היה לעדכן את הסטטוס"),
   });
 
   const removeAppointment = useMutation({
@@ -123,10 +130,10 @@ function Dashboard() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Appointment deleted");
+      toast.success("התור נמחק בהצלחה");
       void queryClient.invalidateQueries({ queryKey: ["appointments"] });
     },
-    onError: () => toast.error("Could not delete the appointment"),
+    onError: () => toast.error("לא ניתן היה למחוק את התור"),
   });
 
   async function signOut() {
@@ -142,25 +149,27 @@ function Dashboard() {
   const upcoming = rows.filter((a) => a.appointment_date > todayKey && a.status !== "canceled");
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-right" dir="rtl">
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur-md">
         <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 py-4">
           <div className="flex min-w-0 items-center gap-2">
             <Sparkles className="size-5 shrink-0 text-primary" />
-            <span className="truncate font-display text-xl tracking-wide">Studio dashboard</span>
+            <span className="truncate font-display text-xl font-medium tracking-wide">
+              אליאל ביוטי — ניהול סטודיו
+            </span>
           </div>
-          <Button variant="ghost" size="sm" className="shrink-0 rounded-full" onClick={signOut}>
-            <LogOut className="size-4" /> Sign out
+          <Button variant="ghost" size="sm" className="shrink-0 rounded-full gap-1.5" onClick={signOut}>
+            <LogOut className="size-4" /> התנתקות
           </Button>
         </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-5 py-8">
         <div className="grid gap-3 sm:grid-cols-3">
-          <StatCard label="Today" value={todays.length} />
-          <StatCard label="Upcoming" value={upcoming.length} />
+          <StatCard label="היום" value={todays.length} />
+          <StatCard label="תורים קרובים" value={upcoming.length} />
           <StatCard
-            label="Awaiting confirmation"
+            label="ממתינים לאישור"
             value={rows.filter((a) => a.status === "pending").length}
           />
         </div>
@@ -168,22 +177,22 @@ function Dashboard() {
         <Tabs defaultValue="schedule" className="mt-8">
           <TabsList className="rounded-full">
             <TabsTrigger value="schedule" className="rounded-full">
-              Schedule
+              לוח זמנים
             </TabsTrigger>
             <TabsTrigger value="all" className="rounded-full">
-              All appointments
+              כל התורים
             </TabsTrigger>
             <TabsTrigger value="availability" className="rounded-full">
-              Availability
+              שעות פעילות ויומן
             </TabsTrigger>
             <TabsTrigger value="notifications" className="rounded-full gap-1.5">
-              <Bell className="size-3.5" /> Notifications
+              <Bell className="size-3.5" /> התראות
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="schedule" className="mt-6 space-y-8">
-            <ScheduleList title="Today" items={todays} />
-            <ScheduleList title="Upcoming" items={upcoming} />
+            <ScheduleList title="היום" items={todays} />
+            <ScheduleList title="תורים עתידיים" items={upcoming} />
           </TabsContent>
 
           <TabsContent value="all" className="mt-6">
@@ -191,12 +200,12 @@ function Dashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Service</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">תאריך</TableHead>
+                    <TableHead className="text-right">שעה</TableHead>
+                    <TableHead className="text-right">לקוחה</TableHead>
+                    <TableHead className="text-right">טלפון</TableHead>
+                    <TableHead className="text-right">טיפול</TableHead>
+                    <TableHead className="text-right">סטטוס</TableHead>
                     <TableHead />
                   </TableRow>
                 </TableHeader>
@@ -204,46 +213,55 @@ function Dashboard() {
                   {rows.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
-                        No appointments yet.
+                        אין תורים עדיין.
                       </TableCell>
                     </TableRow>
                   )}
-                  {rows.map((row) => (
-                    <TableRow key={row.id}>
-                      <TableCell className="whitespace-nowrap">
-                        {format(new Date(`${row.appointment_date}T00:00:00`), "d MMM yyyy")}
-                      </TableCell>
-                      <TableCell>{normalizeTime(row.appointment_time)}</TableCell>
-                      <TableCell className="font-medium">{row.client_name}</TableCell>
-                      <TableCell className="whitespace-nowrap">{row.client_phone}</TableCell>
-                      <TableCell>{row.service_type}</TableCell>
-                      <TableCell>
-                        <Select
-                          value={row.status}
-                          onValueChange={(status) => updateStatus.mutate({ id: row.id, status })}
-                        >
-                          <SelectTrigger className="w-36 rounded-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="confirmed">Confirmed</SelectItem>
-                            <SelectItem value="canceled">Canceled</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setPendingDelete(row)}
-                          aria-label="Delete appointment"
-                        >
-                          <Trash2 className="size-4 text-destructive" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {rows.map((row) => {
+                    const serviceInfo = SERVICES.find(
+                      (s) => s.id === row.service_type || s.name === row.service_type,
+                    );
+                    return (
+                      <TableRow key={row.id}>
+                        <TableCell className="whitespace-nowrap">
+                          {format(new Date(`${row.appointment_date}T00:00:00`), "d בMMMM yyyy", {
+                            locale: he,
+                          })}
+                        </TableCell>
+                        <TableCell>{normalizeTime(row.appointment_time)}</TableCell>
+                        <TableCell className="font-medium">{row.client_name}</TableCell>
+                        <TableCell className="whitespace-nowrap font-mono text-xs" dir="ltr">
+                          {row.client_phone}
+                        </TableCell>
+                        <TableCell>{serviceInfo?.name || row.service_type}</TableCell>
+                        <TableCell>
+                          <Select
+                            value={row.status}
+                            onValueChange={(status) => updateStatus.mutate({ id: row.id, status })}
+                          >
+                            <SelectTrigger className="w-32 rounded-full text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent dir="rtl">
+                              <SelectItem value="pending">ממתין</SelectItem>
+                              <SelectItem value="confirmed">מאושר</SelectItem>
+                              <SelectItem value="canceled">מבוטל</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setPendingDelete(row)}
+                            aria-label="מחיקת תור"
+                          >
+                            <Trash2 className="size-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
@@ -263,24 +281,25 @@ function Dashboard() {
         open={pendingDelete !== null}
         onOpenChange={(open) => !open && setPendingDelete(null)}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-3xl text-right" dir="rtl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this appointment?</AlertDialogTitle>
+            <AlertDialogTitle>למחוק את התור לצמיתות?</AlertDialogTitle>
             <AlertDialogDescription>
               {pendingDelete?.client_name} ·{" "}
-              {pendingDelete ? normalizeTime(pendingDelete.appointment_time) : ""}. This cannot be
-              undone.
+              {pendingDelete ? normalizeTime(pendingDelete.appointment_time) : ""}. פעולה זו תמחק
+              את התור מהמערכת ולא ניתן לשחזר אותה.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="flex-row-reverse justify-start gap-2">
+            <AlertDialogCancel className="rounded-full">ביטול</AlertDialogCancel>
             <AlertDialogAction
+              className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => {
                 if (pendingDelete) removeAppointment.mutate(pendingDelete.id);
                 setPendingDelete(null);
               }}
             >
-              Delete
+              מחיקה
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -291,9 +310,9 @@ function Dashboard() {
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="shadow-card rounded-3xl border border-border bg-card p-5">
+    <div className="shadow-card rounded-3xl border border-border bg-card p-5 text-right">
       <p className="eyebrow">{label}</p>
-      <p className="mt-2 font-display text-4xl">{value}</p>
+      <p className="mt-2 font-display text-4xl font-semibold">{value}</p>
     </div>
   );
 }
@@ -301,33 +320,40 @@ function StatCard({ label, value }: { label: string; value: number }) {
 function ScheduleList({ title, items }: { title: string; items: Appointment[] }) {
   return (
     <section>
-      <h2 className="text-2xl">{title}</h2>
+      <h2 className="text-2xl font-medium">{title}</h2>
       {items.length === 0 ? (
         <p className="mt-3 rounded-2xl bg-secondary p-4 text-sm text-muted-foreground">
-          Nothing scheduled.
+          אין תורים מתוכננים.
         </p>
       ) : (
         <ul className="mt-3 space-y-2">
-          {items.map((item) => (
-            <li
-              key={item.id}
-              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-border bg-card p-4"
-            >
-              <div className="min-w-0">
-                <p className="truncate font-medium">{item.client_name}</p>
-                <p className="truncate text-sm text-muted-foreground">
-                  {format(new Date(`${item.appointment_date}T00:00:00`), "EEE d MMM")} ·{" "}
-                  {normalizeTime(item.appointment_time)} · {item.service_type}
-                </p>
-                {item.notes && (
-                  <p className="mt-1 truncate text-xs text-muted-foreground">{item.notes}</p>
-                )}
-              </div>
-              <Badge className={`shrink-0 rounded-full ${STATUS_STYLE[item.status] ?? ""}`}>
-                {item.status}
-              </Badge>
-            </li>
-          ))}
+          {items.map((item) => {
+            const serviceInfo = SERVICES.find(
+              (s) => s.id === item.service_type || s.name === item.service_type,
+            );
+            return (
+              <li
+                key={item.id}
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-border bg-card p-4"
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{item.client_name}</p>
+                  <p className="truncate text-sm text-muted-foreground">
+                    {format(new Date(`${item.appointment_date}T00:00:00`), "EEEE, d בMMMM", {
+                      locale: he,
+                    })}{" "}
+                    · {normalizeTime(item.appointment_time)} · {serviceInfo?.name || item.service_type}
+                  </p>
+                  {item.notes && (
+                    <p className="mt-1 truncate text-xs text-muted-foreground italic">"{item.notes}"</p>
+                  )}
+                </div>
+                <Badge className={`shrink-0 rounded-full ${STATUS_STYLE[item.status] ?? ""}`}>
+                  {STATUS_LABELS[item.status] || item.status}
+                </Badge>
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>
@@ -381,10 +407,10 @@ function AvailabilityPanel() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Working hours saved");
+      toast.success("שעות הפעילות נשמרו");
       void queryClient.invalidateQueries({ queryKey: ["working_hours"] });
     },
-    onError: () => toast.error("Could not save working hours"),
+    onError: () => toast.error("לא ניתן היה לשמור את שעות הפעילות"),
   });
 
   const addBlock = useMutation({
@@ -397,13 +423,13 @@ function AvailabilityPanel() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Time blocked");
+      toast.success("המועד נחסם בהצלחה");
       setBlockDate("");
       setBlockTime("");
       setReason("");
       void queryClient.invalidateQueries({ queryKey: ["blocked_slots"] });
     },
-    onError: () => toast.error("Could not block that time"),
+    onError: () => toast.error("לא ניתן היה לחסום את המועד"),
   });
 
   const removeBlock = useMutation({
@@ -412,18 +438,18 @@ function AvailabilityPanel() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Block removed");
+      toast.success("החסימה הוסרה בהצלחה");
       void queryClient.invalidateQueries({ queryKey: ["blocked_slots"] });
     },
-    onError: () => toast.error("Could not remove the block"),
+    onError: () => toast.error("לא ניתן היה להסיר את החסימה"),
   });
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <section className="shadow-card rounded-3xl border border-border bg-card p-6">
-        <h2 className="text-2xl">Working hours</h2>
+        <h2 className="text-2xl font-medium">שעות פעילות</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Default opening times used to generate booking slots.
+          שעות פעילות שבועיות לקביעת חלונות תורים פנויים.
         </p>
         <div className="mt-5 space-y-3">
           {(hours.data ?? []).map((row) => (
@@ -432,11 +458,11 @@ function AvailabilityPanel() {
               className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-border/70 p-3"
             >
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{DAY_NAMES[row.day_of_week]}</p>
+                <p className="truncate text-sm font-medium">יום {DAY_NAMES[row.day_of_week]}</p>
                 <div className="mt-2 flex items-center gap-2">
                   <Input
                     type="time"
-                    className="h-9 w-28"
+                    className="h-9 w-28 text-center"
                     value={normalizeTime(row.open_time)}
                     onChange={(e) =>
                       saveHour.mutate({ ...row, open_time: e.target.value || "09:00" })
@@ -445,7 +471,7 @@ function AvailabilityPanel() {
                   <span className="text-muted-foreground">–</span>
                   <Input
                     type="time"
-                    className="h-9 w-28"
+                    className="h-9 w-28 text-center"
                     value={normalizeTime(row.close_time)}
                     onChange={(e) =>
                       saveHour.mutate({ ...row, close_time: e.target.value || "18:00" })
@@ -463,13 +489,13 @@ function AvailabilityPanel() {
       </section>
 
       <section className="shadow-card rounded-3xl border border-border bg-card p-6">
-        <h2 className="text-2xl">Blocked dates &amp; times</h2>
+        <h2 className="text-2xl font-medium">תאריכים ושעות חסומים</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Leave the time empty to block the entire day.
+          השאירי שעה ריקה כדי לחסום יום שלם.
         </p>
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           <div>
-            <Label htmlFor="block_date">Date</Label>
+            <Label htmlFor="block_date">תאריך</Label>
             <Input
               id="block_date"
               type="date"
@@ -479,32 +505,33 @@ function AvailabilityPanel() {
             />
           </div>
           <div>
-            <Label htmlFor="block_time">Time (optional)</Label>
+            <Label htmlFor="block_time">שעה (אופציונלי)</Label>
             <Input
               id="block_time"
               type="time"
-              className="mt-2"
+              className="mt-2 text-center"
               value={blockTime}
               onChange={(e) => setBlockTime(e.target.value)}
             />
           </div>
           <div className="sm:col-span-2">
-            <Label htmlFor="reason">Reason (optional)</Label>
+            <Label htmlFor="reason">סיבה לחסימה (אופציונלי)</Label>
             <Input
               id="reason"
-              className="mt-2"
+              className="mt-2 text-right"
               maxLength={120}
+              placeholder="חופשה, סידורים אישיים וכו'"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
             />
           </div>
         </div>
         <Button
-          className="mt-4 w-full rounded-full"
+          className="mt-4 w-full rounded-full font-medium"
           disabled={!blockDate || addBlock.isPending}
           onClick={() => addBlock.mutate()}
         >
-          <Plus className="size-4" /> Block time
+          <Plus className="size-4 ml-1" /> חסימת מועד
         </Button>
 
         <ul className="mt-5 space-y-2">
@@ -514,10 +541,10 @@ function AvailabilityPanel() {
               className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-border/70 p-3"
             >
               <div className="min-w-0">
-                <p className="flex items-center gap-2 truncate text-sm">
-                  <CalendarClock className="size-4 shrink-0 text-primary" />
-                  {format(new Date(`${block.block_date}T00:00:00`), "d MMM yyyy")}
-                  {block.block_time ? ` · ${normalizeTime(block.block_time)}` : " · all day"}
+                <p className="flex items-center gap-2 truncate text-sm font-medium">
+                  <CalendarClock className="size-4 shrink-0 text-primary ml-1" />
+                  {format(new Date(`${block.block_date}T00:00:00`), "d בMMMM yyyy", { locale: he })}
+                  {block.block_time ? ` · ${normalizeTime(block.block_time)}` : " · יום שלם"}
                 </p>
                 {block.reason && (
                   <p className="mt-1 truncate text-xs text-muted-foreground">{block.reason}</p>
@@ -526,7 +553,7 @@ function AvailabilityPanel() {
               <Button
                 variant="ghost"
                 size="icon"
-                aria-label="Remove block"
+                aria-label="הסרת חסימה"
                 onClick={() => removeBlock.mutate(block.id)}
               >
                 <Trash2 className="size-4 text-destructive" />

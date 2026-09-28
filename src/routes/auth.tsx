@@ -20,15 +20,15 @@ export const Route = createFileRoute("/auth")({
   validateSearch: (search) => authSearchSchema.parse(search),
   head: () => ({
     meta: [
-      { title: "Sign in & Register — Lumière Nails" },
+      { title: "התחברות והרשמה — אליאל ביוטי" },
       {
         name: "description",
-        content: "Sign in or create your account to book your nail appointments.",
+        content: "התחברי או פתחי חשבון לקביעת תורים בסטודיו אליאל ביוטי.",
       },
-      { property: "og:title", content: "Sign in & Register — Lumière Nails" },
+      { property: "og:title", content: "התחברות והרשמה — אליאל ביוטי" },
       {
         property: "og:description",
-        content: "Sign in or create an account to book your appointment.",
+        content: "התחברי או פתחי חשבון לקביעת תורים בסטודיו.",
       },
       { name: "robots", content: "noindex" },
     ],
@@ -63,14 +63,14 @@ function AuthPage() {
     try {
       if (mode === "signup") {
         if (!fullName.trim() || fullName.trim().length < 2) {
-          toast.error("Please enter your full name.");
+          toast.error("אנא הזיני את שמך המלא.");
           setLoading(false);
           return;
         }
 
         const cleanPhone = phone.trim();
         if (!cleanPhone || cleanPhone.length < 7) {
-          toast.error("Please enter a valid phone number.");
+          toast.error("אנא הזיני מספר טלפון תקין.");
           setLoading(false);
           return;
         }
@@ -99,11 +99,11 @@ function AuthPage() {
           });
 
           await refreshProfile();
-          toast.success("Welcome! Your account has been created.");
+          toast.success("ברוכה הבאה! החשבון נוצר בהצלחה.");
           await navigate({ to: redirectTo, replace: true });
         } else {
           toast.success(
-            "Account created! Please check your email to verify your account, then sign in.",
+            "החשבון נוצר! אנא בדקי את תיבת המייל שלך לאימות החשבון ולאחר מכן התחברי.",
           );
           setMode("signin");
         }
@@ -130,11 +130,11 @@ function AuthPage() {
           dest = roleData ? "/dashboard" : "/book";
         }
 
-        toast.success("Signed in successfully!");
+        toast.success("התחברת בהצלחה!");
         await navigate({ to: dest, replace: true });
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Something went wrong");
+      toast.error(error instanceof Error ? error.message : "אירעה שגיאה, אנא נסי שוב");
     } finally {
       setLoading(false);
     }
@@ -148,16 +148,16 @@ function AuthPage() {
             to="/"
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            <ArrowLeft className="size-4" /> Home
+            <ArrowLeft className="size-4 rotate-180" /> דף הבית
           </Link>
           <Link to="/" className="flex items-center gap-2">
             <Sparkles className="size-5 text-primary" />
-            <span className="font-display text-xl tracking-wide">Lumière Nails</span>
+            <span className="font-display text-xl font-medium tracking-wide">אליאל ביוטי</span>
           </Link>
           <div className="w-12" /> {/* balance spacing */}
         </div>
 
-        <div className="shadow-soft mt-8 rounded-3xl border border-border/70 bg-card p-8 sm:p-9">
+        <div className="shadow-soft mt-8 rounded-3xl border border-border/70 bg-card p-8 sm:p-9 text-right" dir="rtl">
           <div className="flex rounded-full bg-secondary/70 p-1 mb-6">
             <button
               type="button"
@@ -168,7 +168,7 @@ function AuthPage() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Sign In
+              התחברות
             </button>
             <button
               type="button"
@@ -179,64 +179,65 @@ function AuthPage() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Sign Up
+              הרשמה
             </button>
           </div>
 
-          <h1 className="text-3xl">{mode === "signin" ? "Welcome back" : "Create your account"}</h1>
+          <h1 className="text-3xl font-medium">{mode === "signin" ? "ברוכה השבה" : "יצירת חשבון חדש"}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {mode === "signin"
-              ? "Sign in to manage your appointments and book faster."
-              : "Sign up with your details to book and manage appointments."}
+              ? "התחברי כדי לנהל את התורים שלך ולקבוע תור במהירות."
+              : "הירשמי עם פרטייך לקביעת תורים ומעקב אישי."}
           </p>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             {mode === "signup" && (
               <>
                 <div>
-                  <Label htmlFor="fullName" className="flex items-center gap-1.5">
+                  <Label htmlFor="fullName" className="flex items-center gap-1.5 text-xs">
                     <User className="size-3.5 text-muted-foreground" />
-                    Full name
+                    שם מלא
                   </Label>
                   <Input
                     id="fullName"
                     type="text"
                     required
-                    placeholder="e.g. Maya Cohen"
+                    placeholder="לדוגמה: מיה כהן"
                     autoComplete="name"
-                    className="mt-2"
+                    className="mt-2 text-right"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="phone" className="flex items-center gap-1.5">
+                  <Label htmlFor="phone" className="flex items-center gap-1.5 text-xs">
                     <Phone className="size-3.5 text-muted-foreground" />
-                    Phone number
+                    מספר טלפון
                   </Label>
                   <Input
                     id="phone"
                     type="tel"
                     inputMode="tel"
                     required
-                    placeholder="e.g. 050-1234567"
+                    placeholder="050-1234567"
                     autoComplete="tel"
-                    className="mt-2"
+                    dir="ltr"
+                    className="mt-2 text-right"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                   />
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Required for appointment confirmations &amp; reminders.
+                    משמש לשליחת אישורי תור ותזכורות.
                   </p>
                 </div>
               </>
             )}
 
             <div>
-              <Label htmlFor="email" className="flex items-center gap-1.5">
+              <Label htmlFor="email" className="flex items-center gap-1.5 text-xs">
                 <Mail className="size-3.5 text-muted-foreground" />
-                Email
+                כתובת אימייל
               </Label>
               <Input
                 id="email"
@@ -244,16 +245,17 @@ function AuthPage() {
                 required
                 placeholder="you@example.com"
                 autoComplete="email"
-                className="mt-2"
+                dir="ltr"
+                className="mt-2 text-right"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
 
             <div>
-              <Label htmlFor="password" className="flex items-center gap-1.5">
+              <Label htmlFor="password" className="flex items-center gap-1.5 text-xs">
                 <Lock className="size-3.5 text-muted-foreground" />
-                Password
+                סיסמה
               </Label>
               <Input
                 id="password"
@@ -262,18 +264,19 @@ function AuthPage() {
                 minLength={6}
                 placeholder="••••••••"
                 autoComplete={mode === "signin" ? "current-password" : "new-password"}
-                className="mt-2"
+                dir="ltr"
+                className="mt-2 text-right"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
               {mode === "signup" && (
-                <p className="mt-1 text-xs text-muted-foreground">At least 6 characters</p>
+                <p className="mt-1 text-xs text-muted-foreground">לפחות 6 תווים</p>
               )}
             </div>
 
-            <Button type="submit" className="w-full rounded-full py-6 mt-2" disabled={loading}>
-              {loading && <Loader2 className="size-4 animate-spin mr-2" />}
-              {mode === "signin" ? "Sign in" : "Create account & continue"}
+            <Button type="submit" className="w-full rounded-full py-6 mt-2 font-medium" disabled={loading}>
+              {loading && <Loader2 className="size-4 animate-spin ml-2" />}
+              {mode === "signin" ? "התחברי" : "צרי חשבון והמשיכי"}
             </Button>
           </form>
 
@@ -284,8 +287,8 @@ function AuthPage() {
               onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
             >
               {mode === "signin"
-                ? "Don't have an account? Sign up"
-                : "Already have an account? Sign in"}
+                ? "עדיין אין לך חשבון? הירשמי כאן"
+                : "כבר יש לך חשבון? התחברי כאן"}
             </button>
           </div>
         </div>

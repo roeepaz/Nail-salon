@@ -1,8 +1,10 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
+import { he } from "date-fns/locale";
 import {
   ArrowLeft,
+  ArrowRight,
   CalendarCheck,
   Check,
   Clock,
@@ -41,16 +43,16 @@ import {
 export const Route = createFileRoute("/book")({
   head: () => ({
     meta: [
-      { title: "Book an appointment — Lumière Nails" },
+      { title: "קביעת תור — אליאל ביוטי" },
       {
         name: "description",
         content:
-          "Choose your gel polish service, pick an available date and time, and confirm your booking online.",
+          "בחרי את הטיפול המבוקש, קבעי מועד נוח ושרייני תור אונליין בסטודיו אליאל ביוטי.",
       },
-      { property: "og:title", content: "Book an appointment — Lumière Nails" },
+      { property: "og:title", content: "קביעת תור — אליאל ביוטי" },
       {
         property: "og:description",
-        content: "Pick a service, a free time slot and confirm your nail appointment.",
+        content: "בחרי טיפול, שעה פנויה ואשרי את התור שלך בקלות.",
       },
     ],
   }),
@@ -58,17 +60,17 @@ export const Route = createFileRoute("/book")({
 });
 
 const detailsSchema = z.object({
-  client_name: z.string().trim().min(2, "Please enter your name").max(80),
+  client_name: z.string().trim().min(2, "אנא הזיני את שמך").max(80),
   client_phone: z
     .string()
     .trim()
-    .min(7, "Please enter a valid phone number")
+    .min(7, "אנא הזיני מספר טלפון תקין")
     .max(25)
-    .regex(/^[0-9+\-\s()]+$/, "Phone can only contain digits and + - ( )"),
-  notes: z.string().trim().max(500, "Notes must be under 500 characters"),
+    .regex(/^[0-9+\-\s()]+$/, "מספר טלפון יכול להכיל ספרות בלבד"),
+  notes: z.string().trim().max(500, "הערות עד 500 תווים"),
 });
 
-const STEPS = ["Service", "Date & time", "Details", "Done"];
+const STEPS = ["טיפול", "תאריך ושעה", "פרטים", "אישור"];
 
 function BookPage() {
   const { user, profile, refreshProfile, signOut } = useAuth();
@@ -146,7 +148,7 @@ function BookPage() {
   const booking = useMutation({
     mutationFn: async () => {
       if (!user) {
-        throw new Error("You must be signed in to book an appointment.");
+        throw new Error("יש להתחבר כדי לקבוע תור.");
       }
 
       const { data, error } = await supabase
@@ -171,13 +173,13 @@ function BookPage() {
     onSuccess: () => setStep(3),
     onError: (error: { code?: string; message: string }) => {
       if (error.code === "23505") {
-        toast.error("That slot was just taken. Please choose another time.");
+        toast.error("שעה זו נתפסה זה עתה. אנא בחרי שעה אחרת.");
         setTime(null);
         setStep(1);
         void availability.refetch();
         return;
       }
-      toast.error(error.message || "We couldn't save your booking. Please try again.");
+      toast.error(error.message || "לא הצלחנו לשמור את התור. אנא נסי שוב.");
     },
   });
 
@@ -188,13 +190,13 @@ function BookPage() {
     try {
       if (authMode === "signup") {
         if (!authName.trim() || authName.trim().length < 2) {
-          toast.error("Please enter your full name");
+          toast.error("אנא הזיני את שמך המלא");
           setAuthLoading(false);
           return;
         }
         const cleanPhone = authPhone.trim();
         if (!cleanPhone || cleanPhone.length < 7) {
-          toast.error("Please enter a valid phone number");
+          toast.error("אנא הזיני מספר טלפון תקין");
           setAuthLoading(false);
           return;
         }
@@ -228,9 +230,9 @@ function BookPage() {
             client_phone: cleanPhone,
           }));
 
-          toast.success("Account created successfully!");
+          toast.success("החשבון נוצר בהצלחה!");
         } else {
-          toast.success("Account created! Please check your email to verify, then sign in.");
+          toast.success("החשבון נוצר! אנא אשרי את החשבון במייל ולאחר מכן התחברי.");
           setAuthMode("signin");
         }
       } else {
@@ -242,10 +244,10 @@ function BookPage() {
         if (error) throw error;
 
         await refreshProfile();
-        toast.success("Signed in successfully!");
+        toast.success("התחברת בהצלחה!");
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Authentication failed");
+      toast.error(err instanceof Error ? err.message : "ההתחברות נכשלה");
     } finally {
       setAuthLoading(false);
     }
@@ -253,7 +255,7 @@ function BookPage() {
 
   function submitDetails() {
     if (!user) {
-      toast.error("Please sign in or create an account to book.");
+      toast.error("אנא התחברי או צרי חשבון כדי לקבוע תור.");
       return;
     }
 
@@ -272,7 +274,7 @@ function BookPage() {
   today.setHours(0, 0, 0, 0);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background text-right" dir="rtl">
       <SiteHeader />
 
       <main className="mx-auto w-full max-w-2xl flex-1 px-5 py-10">
@@ -301,20 +303,20 @@ function BookPage() {
           <section>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h1 className="text-4xl">Choose a service</h1>
+                <h1 className="text-4xl font-medium">בחירת טיפול</h1>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Not sure? Pick the closest one — we can adjust in the studio.
+                  מתלבטת? בחרי את הטיפול הקרוב ביותר — נוכל להתאים בסטודיו.
                 </p>
               </div>
               {!user && (
-                <div className="hidden sm:block text-right shrink-0">
-                  <p className="text-xs text-muted-foreground">Already a client?</p>
+                <div className="hidden sm:block text-left shrink-0">
+                  <p className="text-xs text-muted-foreground">לקוחה רשומה?</p>
                   <Link
                     to="/auth"
                     search={{ redirect: "/book" }}
                     className="text-xs font-semibold text-primary hover:underline"
                   >
-                    Sign in here
+                    התחברי כאן
                   </Link>
                 </div>
               )}
@@ -330,16 +332,16 @@ function BookPage() {
                     setStep(1);
                   }}
                   className={cn(
-                    "w-full rounded-2xl border border-border bg-card p-5 text-start transition-all hover:border-primary hover:shadow-card",
+                    "w-full rounded-2xl border border-border bg-card p-5 text-start transition-all hover:border-primary hover:shadow-card cursor-pointer",
                     service?.id === item.id && "border-primary shadow-card",
                   )}
                 >
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3">
-                    <span className="truncate text-xl">{item.name}</span>
-                    <span className="shrink-0 text-primary font-medium">{item.price}</span>
+                    <span className="truncate text-xl font-medium">{item.name}</span>
+                    <span className="shrink-0 text-primary font-semibold">{item.price}</span>
                   </div>
                   <p className="eyebrow mt-1">{item.duration}</p>
-                  <p className="mt-2 text-sm text-muted-foreground">{item.description}</p>
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{item.description}</p>
                 </button>
               ))}
             </div>
@@ -348,13 +350,14 @@ function BookPage() {
 
         {step === 1 && (
           <section>
-            <h1 className="text-4xl">Pick a date &amp; time</h1>
+            <h1 className="text-4xl font-medium">בחירת תאריך ושעה</h1>
             <p className="mt-2 text-sm text-muted-foreground font-medium text-primary">
               {service?.name} · {service?.price} ({service?.duration})
             </p>
 
-            <div className="mt-6 flex justify-center rounded-3xl border border-border bg-card p-3 shadow-soft">
+            <div className="mt-6 flex justify-center rounded-3xl border border-border bg-card p-3 shadow-soft" dir="rtl">
               <Calendar
+                locale={he}
                 mode="single"
                 selected={date}
                 onSelect={(value) => {
@@ -368,10 +371,10 @@ function BookPage() {
 
             {date && (
               <div className="mt-6">
-                <p className="eyebrow">Available on {format(date, "EEEE, d MMM")}</p>
+                <p className="eyebrow">מועדים פנויים ליום {format(date, "EEEE, d בMMMM", { locale: he })}</p>
                 {availability.isLoading ? (
                   <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="size-4 animate-spin" /> Checking the diary…
+                    <Loader2 className="size-4 animate-spin ml-2" /> בודק שעות פנויות ביומן…
                   </p>
                 ) : availability.data && availability.data.length > 0 ? (
                   <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
@@ -381,7 +384,7 @@ function BookPage() {
                         type="button"
                         onClick={() => setTime(slot)}
                         className={cn(
-                          "rounded-xl border border-border bg-card py-3 text-sm font-medium transition-colors hover:border-primary",
+                          "rounded-xl border border-border bg-card py-3 text-sm font-medium transition-colors hover:border-primary cursor-pointer",
                           time === slot && "border-primary bg-primary text-primary-foreground",
                         )}
                       >
@@ -391,7 +394,7 @@ function BookPage() {
                   </div>
                 ) : (
                   <p className="mt-4 rounded-2xl bg-secondary p-4 text-sm text-muted-foreground">
-                    No free slots on this day. Please try another date.
+                    אין תורים פנויים ביום זה. אנא בחרי תאריך אחר.
                   </p>
                 )}
               </div>
@@ -399,14 +402,14 @@ function BookPage() {
 
             <div className="mt-8 flex gap-3">
               <Button variant="outline" className="rounded-full" onClick={() => setStep(0)}>
-                <ArrowLeft className="size-4" /> Back
+                <ArrowRight className="size-4 ml-1" /> חזרה
               </Button>
               <Button
-                className="flex-1 rounded-full"
+                className="flex-1 rounded-full font-medium"
                 disabled={!date || !time}
                 onClick={() => setStep(2)}
               >
-                Continue
+                המשך
               </Button>
             </div>
           </section>
@@ -414,9 +417,9 @@ function BookPage() {
 
         {step === 2 && (
           <section>
-            <h1 className="text-4xl">Your details</h1>
+            <h1 className="text-4xl font-medium">פרטי ההזמנה</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              {service?.name} · {date ? format(date, "EEEE, d MMM") : ""} · {time}
+              {service?.name} · {date ? format(date, "EEEE, d בMMMM", { locale: he }) : ""} · {time}
             </p>
 
             {/* REQUIRE SIGNED-IN USER */}
@@ -427,9 +430,9 @@ function BookPage() {
                     <Lock className="size-5" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-semibold">Sign in to book</h2>
+                    <h2 className="text-xl font-medium">התחברי לקביעת תור</h2>
                     <p className="text-xs text-muted-foreground">
-                      An account is required to reserve your slot and manage your bookings.
+                      נדרש חשבון כדי לשריין את התור שלך ולנהל את ההזמנות.
                     </p>
                   </div>
                 </div>
@@ -444,7 +447,7 @@ function BookPage() {
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    Create account
+                    יצירת חשבון
                   </button>
                   <button
                     type="button"
@@ -455,7 +458,7 @@ function BookPage() {
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    Sign in
+                    התחברות
                   </button>
                 </div>
 
@@ -465,14 +468,14 @@ function BookPage() {
                       <div>
                         <Label htmlFor="authName" className="flex items-center gap-1.5 text-xs">
                           <User className="size-3.5 text-muted-foreground" />
-                          Full name
+                          שם מלא
                         </Label>
                         <Input
                           id="authName"
                           type="text"
                           required
-                          placeholder="e.g. Maya Cohen"
-                          className="mt-1.5"
+                          placeholder="לדוגמה: מיה כהן"
+                          className="mt-1.5 text-right"
                           value={authName}
                           onChange={(e) => setAuthName(e.target.value)}
                         />
@@ -480,15 +483,16 @@ function BookPage() {
                       <div>
                         <Label htmlFor="authPhone" className="flex items-center gap-1.5 text-xs">
                           <Phone className="size-3.5 text-muted-foreground" />
-                          Phone number
+                          מספר טלפון
                         </Label>
                         <Input
                           id="authPhone"
                           type="tel"
                           inputMode="tel"
                           required
-                          placeholder="e.g. 050-1234567"
-                          className="mt-1.5"
+                          placeholder="050-1234567"
+                          dir="ltr"
+                          className="mt-1.5 text-right"
                           value={authPhone}
                           onChange={(e) => setAuthPhone(e.target.value)}
                         />
@@ -499,14 +503,15 @@ function BookPage() {
                   <div>
                     <Label htmlFor="authEmail" className="flex items-center gap-1.5 text-xs">
                       <Mail className="size-3.5 text-muted-foreground" />
-                      Email address
+                      כתובת אימייל
                     </Label>
                     <Input
                       id="authEmail"
                       type="email"
                       required
                       placeholder="you@example.com"
-                      className="mt-1.5"
+                      dir="ltr"
+                      className="mt-1.5 text-right"
                       value={authEmail}
                       onChange={(e) => setAuthEmail(e.target.value)}
                     />
@@ -515,7 +520,7 @@ function BookPage() {
                   <div>
                     <Label htmlFor="authPassword" className="flex items-center gap-1.5 text-xs">
                       <Lock className="size-3.5 text-muted-foreground" />
-                      Password
+                      סיסמה
                     </Label>
                     <Input
                       id="authPassword"
@@ -523,7 +528,8 @@ function BookPage() {
                       required
                       minLength={6}
                       placeholder="••••••••"
-                      className="mt-1.5"
+                      dir="ltr"
+                      className="mt-1.5 text-right"
                       value={authPassword}
                       onChange={(e) => setAuthPassword(e.target.value)}
                     />
@@ -531,11 +537,11 @@ function BookPage() {
 
                   <Button
                     type="submit"
-                    className="w-full rounded-full py-5 mt-2"
+                    className="w-full rounded-full py-5 mt-2 font-medium"
                     disabled={authLoading}
                   >
-                    {authLoading && <Loader2 className="size-4 animate-spin mr-2" />}
-                    {authMode === "signup" ? "Create account & continue" : "Sign in & continue"}
+                    {authLoading && <Loader2 className="size-4 animate-spin ml-2" />}
+                    {authMode === "signup" ? "צרי חשבון והמשיכי" : "התחברי והמשיכי"}
                   </Button>
                 </form>
 
@@ -545,7 +551,7 @@ function BookPage() {
                     search={{ redirect: "/book" }}
                     className="text-xs text-muted-foreground hover:text-primary transition-colors"
                   >
-                    Need more options? Go to full sign-in page
+                    אפשרויות נוספות? עברי לעמוד ההתחברות המלא
                   </Link>
                 </div>
               </div>
@@ -556,7 +562,7 @@ function BookPage() {
                   <div className="flex items-center gap-2">
                     <UserCheck className="size-4 text-primary" />
                     <span>
-                      Booking as{" "}
+                      הזמנה כ-{" "}
                       <span className="font-semibold text-foreground">
                         {profile?.full_name || user.email}
                       </span>
@@ -565,17 +571,17 @@ function BookPage() {
                   <button
                     type="button"
                     onClick={() => signOut()}
-                    className="text-xs text-muted-foreground hover:text-destructive underline"
+                    className="text-xs text-muted-foreground hover:text-destructive underline cursor-pointer"
                   >
-                    Switch account
+                    החלפת חשבון
                   </button>
                 </div>
 
                 <div>
-                  <Label htmlFor="client_name">Full name</Label>
+                  <Label htmlFor="client_name">שם מלא</Label>
                   <Input
                     id="client_name"
-                    className="mt-2"
+                    className="mt-2 text-right"
                     maxLength={80}
                     value={form.client_name}
                     onChange={(e) => setForm({ ...form, client_name: e.target.value })}
@@ -586,12 +592,13 @@ function BookPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="client_phone">Phone number</Label>
+                  <Label htmlFor="client_phone">מספר טלפון</Label>
                   <Input
                     id="client_phone"
                     type="tel"
                     inputMode="tel"
-                    className="mt-2"
+                    dir="ltr"
+                    className="mt-2 text-right"
                     maxLength={25}
                     value={form.client_phone}
                     onChange={(e) => setForm({ ...form, client_phone: e.target.value })}
@@ -602,13 +609,13 @@ function BookPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="notes">Notes (optional)</Label>
+                  <Label htmlFor="notes">הערות (אופציונלי)</Label>
                   <Textarea
                     id="notes"
-                    className="mt-2"
+                    className="mt-2 text-right"
                     maxLength={500}
                     rows={4}
-                    placeholder="Colour ideas, allergies, anything we should know"
+                    placeholder="צבעים מבוקשים, אלרגיות, או כל דבר שחשוב שנדע"
                     value={form.notes}
                     onChange={(e) => setForm({ ...form, notes: e.target.value })}
                   />
@@ -621,15 +628,15 @@ function BookPage() {
 
             <div className="mt-8 flex gap-3">
               <Button variant="outline" className="rounded-full" onClick={() => setStep(1)}>
-                <ArrowLeft className="size-4" /> Back
+                <ArrowRight className="size-4 ml-1" /> חזרה
               </Button>
               <Button
-                className="flex-1 rounded-full"
+                className="flex-1 rounded-full font-medium"
                 disabled={!user || booking.isPending}
                 onClick={submitDetails}
               >
-                {booking.isPending && <Loader2 className="size-4 animate-spin mr-2" />}
-                Confirm booking
+                {booking.isPending && <Loader2 className="size-4 animate-spin ml-2" />}
+                אישור וקביעת תור
               </Button>
             </div>
           </section>
@@ -640,23 +647,23 @@ function BookPage() {
             <div className="mx-auto grid size-16 place-items-center rounded-full bg-primary/10">
               <Check className="size-8 text-primary" />
             </div>
-            <h1 className="mt-6 text-4xl">You're booked!</h1>
-            <p className="mt-3 text-muted-foreground">
-              {service?.name} on {date ? format(date, "EEEE, d MMMM") : ""} at {time}.
+            <h1 className="mt-6 text-4xl font-medium">התור נקבע בהצלחה! ✨</h1>
+            <p className="mt-3 text-muted-foreground text-lg">
+              {service?.name} ביום {date ? format(date, "EEEE, d בMMMM", { locale: he }) : ""} בשעה {time}.
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
-              We'll send updates and confirm via {form.client_phone}.
+              נשלח אלייך אישור ותזכורות למספר {form.client_phone}.
             </p>
 
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Button asChild variant="outline" className="rounded-full">
-                <Link to="/my-bookings">View my appointments</Link>
+                <Link to="/my-bookings">לצפייה בתורים שלי</Link>
               </Button>
               <Button asChild variant="outline" className="rounded-full">
-                <Link to="/">Back home</Link>
+                <Link to="/">חזרה לדף הבית</Link>
               </Button>
               <Button
-                className="rounded-full"
+                className="rounded-full font-medium"
                 onClick={() => {
                   setStep(0);
                   setService(null);
@@ -669,7 +676,7 @@ function BookPage() {
                   });
                 }}
               >
-                <CalendarCheck className="size-4 mr-2" /> Book another
+                <CalendarCheck className="size-4 ml-2" /> קביעת תור נוסף
               </Button>
             </div>
           </section>
