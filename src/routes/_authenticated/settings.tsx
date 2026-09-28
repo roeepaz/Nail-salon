@@ -456,7 +456,10 @@ function GalleryPanel() {
       void queryClient.invalidateQueries({ queryKey: ["gallery_images"] });
       setUrlForm({ url: "", alt_text: "" }); setShowUrlForm(false);
     },
-    onError: () => toast.error("שגיאה בהוספת התמונה"),
+    onError: (err: any) => {
+      console.error("Add image error:", err);
+      toast.error(`שגיאה בהוספת התמונה: ${err?.message || ""}`);
+    },
   });
 
   const deleteImage = useMutation({
@@ -493,14 +496,25 @@ function GalleryPanel() {
     if (!file) return;
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop() ?? "jpg";
-      const path = `gallery/${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from("gallery").upload(path, file, { upsert: true });
-      if (uploadError) { toast.error("שגיאה בהעלאה. נסי הוספה בקישור."); return; }
-      const { data: urlData } = supabase.storage.from("gallery").getPublicUrl(path);
+      const ext = (file.name.split(".").pop() ?? "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${ext || "jpg"}`;
+      const uploadOptions: { upsert: boolean; contentType?: string } = { upsert: true };
+      if (file.type) uploadOptions.contentType = file.type;
+      const { error: uploadError } = await supabase.storage.from("gallery").upload(fileName, file, uploadOptions);
+      if (uploadError) {
+        console.error("Storage upload error:", uploadError);
+        toast.error(`שגיאה בהעלאה: ${uploadError.message}`);
+        return;
+      }
+      const { data: urlData } = supabase.storage.from("gallery").getPublicUrl(fileName);
       await addImage.mutateAsync({ url: urlData.publicUrl, alt_text: file.name.replace(/\.[^.]+$/, "") });
-    } catch { toast.error("שגיאה בהעלאת הקובץ"); }
-    finally { setUploading(false); e.target.value = ""; }
+    } catch (err: any) {
+      console.error("Upload handler error:", err);
+      toast.error(`שגיאה בהעלאת הקובץ: ${err?.message || ""}`);
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
   }
 
   const list = images.data ?? [];
