@@ -1,10 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { NotificationService } from "@/lib/notifications/service";
-import { getAppointmentUtcTimestamp } from "@/lib/notifications/scheduler";
 
 export const runReminderSchedulerFn = createServerFn({ method: "POST" }).handler(async () => {
   try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { NotificationService } = await import("@/lib/notifications/service");
+    const { getAppointmentUtcTimestamp } = await import("@/lib/notifications/scheduler");
+
     // 1. Fetch business notification settings
     const { data: businessSettings } = await supabaseAdmin
       .from("business_notification_settings")
