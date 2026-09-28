@@ -6,7 +6,7 @@ import type {
   NotificationType,
   SendNotificationOptions,
 } from "./types";
-import { ResendEmailProvider, type EmailProvider } from "./providers/email";
+import { createEmailProvider, type EmailProvider } from "./providers/email";
 import { MetaWhatsAppCloudProvider, type WhatsAppProvider } from "./providers/whatsapp";
 import { WebPushProvider, type PushProvider } from "./providers/push";
 import {
@@ -29,7 +29,7 @@ export class NotificationService {
     pushProvider?: PushProvider,
   ) {
     this.db = db;
-    this.emailProvider = emailProvider || new ResendEmailProvider();
+    this.emailProvider = emailProvider || createEmailProvider();
     this.whatsappProvider = whatsappProvider || new MetaWhatsAppCloudProvider();
     this.pushProvider = pushProvider || new WebPushProvider();
   }

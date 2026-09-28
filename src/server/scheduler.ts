@@ -40,7 +40,7 @@ export const runReminderSchedulerFn = createServerFn({ method: "POST" }).handler
     const { data: appointments, error: aptError } = await supabaseAdmin
       .from("appointments")
       .select("*")
-      .neq("status", "canceled")
+      .eq("status", "confirmed")
       .gte("appointment_date", todayStr)
       .lte("appointment_date", futureStr);
 

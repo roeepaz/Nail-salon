@@ -306,3 +306,123 @@ export function getCancellationEmail(data: AppointmentEmailData): { subject: str
     html: baseEmailLayout(content, `התור שלך לטיפול ${data.serviceName} בתאריך ${data.date} בוטל.`),
   };
 }
+
+export interface AdminNotificationEmailData {
+  customerName: string;
+  customerPhone: string;
+  customerEmail?: string | null;
+  serviceName: string;
+  date: string;
+  time: string;
+  notes?: string | null;
+  bookingId: string;
+  dashboardUrl?: string;
+}
+
+export function getAdminNewBookingEmail(data: AdminNotificationEmailData): { subject: string; html: string } {
+  const subject = `🔔 תור חדש ממתין לאישורך: ${data.customerName} (${data.serviceName}) | אליאל ביוטי`;
+  const dashboardLink = data.dashboardUrl || "https://elielbeauty.co.il/dashboard";
+  const content = `
+    <div style="background: #fff0f3; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; border-right: 4px solid #e17085;">
+      <h3 style="margin: 0; color: #b83350; font-size: 16px;">תור חדש נקבע וממתין לאישורך! 💅</h3>
+      <p style="margin: 4px 0 0 0; font-size: 13px; color: #6b3341;">
+        לקוחה הגישה בקשה לקביעת תור בסטודיו. התור נקלט בסטטוס "ממתין לאישור" ויש לאשרו בלוח הניהול כדי לשלוח ללקוחה הודעת אישור.
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="detail-row">
+        <span class="detail-label">שם הלקוחה</span>
+        <span class="detail-value">${data.customerName}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">מספר טלפון</span>
+        <span class="detail-value" dir="ltr"><a href="tel:${data.customerPhone}" style="color: #e17085; text-decoration: none; font-weight: 600;">${data.customerPhone}</a></span>
+      </div>
+      ${data.customerEmail ? `
+      <div class="detail-row">
+        <span class="detail-label">אימייל לקוחה</span>
+        <span class="detail-value" dir="ltr"><a href="mailto:${data.customerEmail}" style="color: #e17085; text-decoration: none;">${data.customerEmail}</a></span>
+      </div>` : ""}
+      <div class="detail-row">
+        <span class="detail-label">סוג הטיפול</span>
+        <span class="detail-value">${data.serviceName}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">תאריך מבוקש</span>
+        <span class="detail-value">${data.date}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">שעה מבוקשת</span>
+        <span class="detail-value">${data.time}</span>
+      </div>
+      ${data.notes ? `
+      <div class="detail-row">
+        <span class="detail-label">הערות לקוחה</span>
+        <span class="detail-value">${data.notes}</span>
+      </div>` : ""}
+      <div class="detail-row">
+        <span class="detail-label">מזהה תור</span>
+        <span class="detail-value" style="font-family: monospace;">${data.bookingId.slice(0, 8).toUpperCase()}</span>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin: 28px 0 10px 0;">
+      <a href="${dashboardLink}" class="cta-button" style="display: inline-block; padding: 14px 32px; font-size: 15px;">
+        כניסה ללוח הניהול לאישור התור ←
+      </a>
+    </div>
+  `;
+
+  return {
+    subject,
+    html: baseEmailLayout(content, `תור חדש מ-${data.customerName} לטיפול ${data.serviceName} ב-${data.date} בשעה ${data.time} ממתין לאישורך.`),
+  };
+}
+
+export function getAdminBookingCanceledEmail(data: AdminNotificationEmailData): { subject: string; html: string } {
+  const subject = `❌ עדכון: לקוחה ביטלה תור (${data.customerName} - ${data.date}) | אליאל ביוטי`;
+  const dashboardLink = data.dashboardUrl || "https://elielbeauty.co.il/dashboard";
+  const content = `
+    <div style="background: #fbf0f0; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; border-right: 4px solid #d94f4f;">
+      <h3 style="margin: 0; color: #a12b2b; font-size: 16px;">תור בוטל על ידי הלקוחה</h3>
+      <p style="margin: 4px 0 0 0; font-size: 13px; color: #702828;">
+        המשבצת התפנתה ביומן וזמינה להזמנות חדשות.
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="detail-row">
+        <span class="detail-label">שם הלקוחה</span>
+        <span class="detail-value">${data.customerName}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">מספר טלפון</span>
+        <span class="detail-value" dir="ltr">${data.customerPhone}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">טיפול שבוטל</span>
+        <span class="detail-value">${data.serviceName}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">תאריך שהיה קבוע</span>
+        <span class="detail-value">${data.date}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">שעה</span>
+        <span class="detail-value">${data.time}</span>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin: 28px 0 10px 0;">
+      <a href="${dashboardLink}" class="cta-button" style="display: inline-block; padding: 14px 32px; font-size: 15px; background: #6b6062;">
+        לצפייה בלוח הזמנים המעודכן ←
+      </a>
+    </div>
+  `;
+
+  return {
+    subject,
+    html: baseEmailLayout(content, `התור של ${data.customerName} לטיפול ${data.serviceName} ב-${data.date} בשעה ${data.time} בוטל.`),
+  };
+}

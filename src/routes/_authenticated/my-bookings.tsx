@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserNotificationSettings } from "@/components/notifications/user-notification-settings";
-import { dispatchAppointmentNotification } from "@/lib/notifications/dispatcher";
+import { dispatchAppointmentNotification, dispatchAdminNotification } from "@/lib/notifications/dispatcher";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { useAuth } from "@/hooks/use-auth";
@@ -52,7 +52,7 @@ type Appointment = {
 
 function getBadge(status: string): { label: string; className: string } {
   if (status === "confirmed") {
-    return { label: "מאושר", className: "bg-primary/15 text-primary border-primary/20" };
+    return { label: "מאושר ✓", className: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30" };
   }
   if (status === "canceled") {
     return {
@@ -60,7 +60,7 @@ function getBadge(status: string): { label: string; className: string } {
       className: "bg-destructive/10 text-destructive border-destructive/20",
     };
   }
-  return { label: "ממתין לאישור", className: "bg-secondary text-secondary-foreground" };
+  return { label: "ממתין לאישור ⏳", className: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 font-medium" };
 }
 
 function MyBookingsPage() {
@@ -96,6 +96,7 @@ function MyBookingsPage() {
     onSuccess: (canceledId) => {
       toast.success("התור בוטל בהצלחה");
       void dispatchAppointmentNotification(canceledId, "appointment_cancellation");
+      void dispatchAdminNotification(canceledId, "booking_canceled");
       setCancelingAppointment(null);
       void queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
     },
@@ -218,6 +219,11 @@ function MyBookingsPage() {
                           {item.notes && (
                             <p className="mt-3 text-xs bg-secondary/50 rounded-lg p-2.5 text-muted-foreground italic">
                               "{item.notes}"
+                            </p>
+                          )}
+                          {item.status === "pending" && (
+                            <p className="mt-3 text-xs text-amber-700 dark:text-amber-300 bg-amber-500/10 rounded-lg p-2.5 border border-amber-500/20">
+                              התור ממתין לאישור מנהלת הסטודיו. תישלח אלייך הודעה ברגע שהתור יאושר.
                             </p>
                           )}
                         </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -13,11 +13,20 @@ import {
   Calendar,
   Globe,
   Sliders,
+  Mail,
+  Smartphone,
+  Volume2,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import { runReminderSchedulerFn } from "@/server/scheduler";
-import { dispatchNotificationServerFn } from "@/server/notifications";
+import { dispatchNotificationServerFn, dispatchAdminNotificationServerFn } from "@/server/notifications";
+import {
+  getPushPermissionState,
+  subscribeToPush,
+  type PushPermissionState,
+} from "@/lib/push-client";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -58,8 +67,72 @@ interface NotificationLog {
 
 export function AdminNotificationSettings() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "sent" | "failed" | "skipped">("all");
+  const [pushState, setPushState] = useState<PushPermissionState>("unsupported");
+  const [isSubscribingPush, setIsSubscribingPush] = useState(false);
+  const [isSendingAdminTest, setIsSendingAdminTest] = useState(false);
+
+  useEffect(() => {
+    setPushState(getPushPermissionState());
+  }, []);
+
+  const handleEnablePush = async () => {
+    if (!user) {
+      toast.error("יש להתחבר כדי להפעיל התראות");
+      return;
+    }
+    setIsSubscribingPush(true);
+    try {
+      const res = await subscribeToPush(user.id);
+      if (res.success) {
+        toast.success("התראות פוש הופעלו בהצלחה במכשיר זה! ✨");
+        setPushState("granted");
+      } else {
+        toast.error(res.error || "הפעלת התראות פוש נכשלה");
+        setPushState(getPushPermissionState());
+      }
+    } catch (err) {
+      toast.error("שגיאה בהפעלת התראות פוש");
+    } finally {
+      setIsSubscribingPush(false);
+    }
+  };
+
+  const handleSendTestAdminNotification = async () => {
+    setIsSendingAdminTest(true);
+    try {
+      const { data: apts } = await supabase
+        .from("appointments")
+        .select("id, client_name")
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      const target = apts?.[0];
+      if (!target) {
+        toast.error("אין תורים במערכת לבדיקה");
+        return;
+      }
+
+      const res = await dispatchAdminNotificationServerFn({
+        data: {
+          appointmentId: target.id,
+          event: "new_booking",
+        },
+      });
+
+      if (res.success) {
+        toast.success("התראת מנהל נשלחה בהצלחה למייל (roeepaz15@gmail.com) ולהתראות פוש! 🚀");
+      } else {
+        toast.error(`שגיאה בשליחת התראה: ${res.error || "שגיאה לא ידועה"}`);
+      }
+    } catch (err) {
+      toast.error("נכשלה שליחת התראת בדיקה למנהל");
+    } finally {
+      setIsSendingAdminTest(false);
+    }
+  };
 
   // Fetch business settings
   const { data: settings, isLoading: isLoadingSettings } = useQuery({
@@ -254,6 +327,103 @@ export function AdminNotificationSettings() {
 
   return (
     <div className="space-y-8 text-right" dir="rtl">
+      {/* Admin Instant Alerts Card */}
+      <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+          <div className="flex items-center gap-2">
+            <Bell className="size-5 text-primary" />
+            <h3 className="text-lg font-display font-medium text-foreground">
+              התראות מיידיות למנהל/ת הסטודיו
+            </h3>
+          </div>
+          <Button
+            size="sm"
+            className="rounded-full gap-1.5 text-xs shadow-sm bg-primary text-primary-foreground hover:bg-primary/90 font-medium cursor-pointer"
+            onClick={handleSendTestAdminNotification}
+            disabled={isSendingAdminTest}
+          >
+            {isSendingAdminTest ? <Loader2 className="size-3.5 animate-spin ml-1" /> : <Send className="size-3.5 ml-1" />}
+            שליחת התראת בדיקה למנהל (מייל + פוש)
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground mb-6">
+          קבלת עדכון מיידי בכל פעם שלקוחה קובעת תור חדש הממתין לאישורך או מבטלת תור, כך שתמיד תהיי מעודכנת מבלי להחמיץ אף בקשה.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Push on this device */}
+          <div className="rounded-xl border border-border/60 bg-background/80 p-4 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Smartphone className="size-4 text-primary" />
+                <span>התראות פוש במכשיר זה</span>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                קבלת התראות ישירות למסך הנייד או המחשב גם כשהאתר סגור.
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-border/40 flex items-center justify-between">
+              {pushState === "granted" ? (
+                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 text-xs gap-1">
+                  <CheckCircle2 className="size-3" /> פעיל במכשיר זה
+                </Badge>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="rounded-full text-xs font-medium h-8"
+                  onClick={handleEnablePush}
+                  disabled={isSubscribingPush || pushState === "unsupported"}
+                >
+                  {isSubscribingPush && <Loader2 className="size-3 animate-spin ml-1" />}
+                  הפעל התראות פוש
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Email to admin */}
+          <div className="rounded-xl border border-border/60 bg-background/80 p-4 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Mail className="size-4 text-primary" />
+                <span>הודעות דוא״ל למנהל/ת</span>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                מייל מפורט עם כל פרטי הלקוחה, התאריך והשעה, עם כפתור לאישור מיידי.
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-border/40 flex items-center justify-between">
+              <span className="font-mono text-xs text-muted-foreground truncate" dir="ltr">
+                roeepaz15@gmail.com
+              </span>
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 text-xs">
+                מופעל
+              </Badge>
+            </div>
+          </div>
+
+          {/* Realtime in dashboard */}
+          <div className="rounded-xl border border-border/60 bg-background/80 p-4 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Volume2 className="size-4 text-primary" />
+                <span>התראה קולית ועדכון חי</span>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                צליל נעים ורענון אוטומטי של לוח התורים בזמן אמת כשהלוח פתוח.
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-border/40 flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">סנכרון Realtime</span>
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 text-xs gap-1">
+                <CheckCircle2 className="size-3" /> פעיל בלוח
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Studio Notification Rules */}
       <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
@@ -299,8 +469,8 @@ export function AdminNotificationSettings() {
             <div className="space-y-4">
               <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50">
                 <div>
-                  <Label className="text-sm font-medium">אישור תור אוטומטי</Label>
-                  <p className="text-xs text-muted-foreground">נשלח מיד עם קביעת התור ע"י הלקוחה</p>
+                  <Label className="text-sm font-medium">הודעת אישור תור ללקוחה</Label>
+                  <p className="text-xs text-muted-foreground">נשלחת ללקוחה בעת אישור התור על ידי המנהלת</p>
                 </div>
                 <Switch
                   checked={settings?.appointment_confirmation ?? true}

@@ -30,7 +30,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { dispatchAppointmentNotification } from "@/lib/notifications/dispatcher";
+import { dispatchAdminNotification } from "@/lib/notifications/dispatcher";
 import {
   SERVICES,
   buildDaySlots,
@@ -166,9 +166,13 @@ function BookPage() {
         .single();
 
       if (error) throw error;
+      // Send immediate alert (email + browser push) to salon manager so they know a new booking is pending
       if (data?.id) {
-        void dispatchAppointmentNotification(data.id, "appointment_confirmation");
+        void dispatchAdminNotification(data.id, "new_booking");
       }
+      // Note: We do NOT send "appointment_confirmation" to client here.
+      // Appointments are created with status 'pending' and are confirmed only when
+      // the manager approves them in the admin dashboard.
     },
     onSuccess: () => setStep(3),
     onError: (error: { code?: string; message: string }) => {
@@ -636,7 +640,7 @@ function BookPage() {
                 onClick={submitDetails}
               >
                 {booking.isPending && <Loader2 className="size-4 animate-spin ml-2" />}
-                אישור וקביעת תור
+                שליחת בקשה לקביעת תור
               </Button>
             </div>
           </section>
@@ -647,17 +651,23 @@ function BookPage() {
             <div className="mx-auto grid size-16 place-items-center rounded-full bg-primary/10">
               <Check className="size-8 text-primary" />
             </div>
-            <h1 className="mt-6 text-4xl font-medium">התור נקבע בהצלחה! ✨</h1>
+            <h1 className="mt-6 text-3xl sm:text-4xl font-display font-medium">בקשת התור נשלחה בהצלחה! ✨</h1>
             <p className="mt-3 text-muted-foreground text-lg">
               {service?.name} ביום {date ? format(date, "EEEE, d בMMMM", { locale: he }) : ""} בשעה {time}.
             </p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              נשלח אלייך אישור ותזכורות למספר {form.client_phone}.
-            </p>
+            <div className="mx-auto mt-5 max-w-md rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-right">
+              <p className="font-semibold text-amber-700 dark:text-amber-400 text-sm flex items-center gap-1.5">
+                <Clock className="size-4 shrink-0 text-amber-600 dark:text-amber-300" />
+                התור ממתין לאישור מנהלת הסטודיו
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                בקשתך נקלטה במערכת. ברגע שמנהלת הסטודיו תאשר את התור בדף הניהול, תישלח אלייך הודעת אישור רשמית למספר <strong>{form.client_phone}</strong> ולמייל.
+              </p>
+            </div>
 
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Button asChild variant="outline" className="rounded-full">
-                <Link to="/my-bookings">לצפייה בתורים שלי</Link>
+                <Link to="/my-bookings">לצפייה בסטטוס התור ב"תורים שלי"</Link>
               </Button>
               <Button asChild variant="outline" className="rounded-full">
                 <Link to="/">חזרה לדף הבית</Link>

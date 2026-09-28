@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
-import { CalendarClock, LogOut, Plus, Sparkles, Trash2, Bell } from "lucide-react";
+import { CalendarClock, LogOut, Plus, Sparkles, Trash2, Bell, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
@@ -68,16 +68,39 @@ type Appointment = {
 };
 
 const STATUS_STYLE: Record<string, string> = {
-  pending: "bg-secondary text-secondary-foreground",
-  confirmed: "bg-primary/15 text-primary",
-  canceled: "bg-destructive/10 text-destructive",
+  pending: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30",
+  confirmed: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30",
+  canceled: "bg-destructive/10 text-destructive border border-destructive/20",
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  pending: "ממתין",
+  pending: "ממתין לאישור",
   confirmed: "מאושר",
   canceled: "מבוטל",
 };
+
+function playNotificationSound() {
+  try {
+    const AudioCtx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12);
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.4);
+  } catch {
+    // Non-fatal if audio context is blocked
+  }
+}
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -91,6 +114,42 @@ function Dashboard() {
       void navigate({ to: "/my-bookings", replace: true });
     }
   }, [isAdmin, isAuthLoading, navigate]);
+
+  // Live Realtime listener for incoming appointments & cancellations
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const channel = supabase
+      .channel("admin-appointments-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "appointments" },
+        (payload) => {
+          void queryClient.invalidateQueries({ queryKey: ["appointments"] });
+
+          if (payload.eventType === "INSERT") {
+            playNotificationSound();
+            const newApt = payload.new as Appointment;
+            toast.info(`🔔 תור חדש התקבל! ${newApt.client_name} ממתינה לאישורך.`, {
+              duration: 8000,
+            });
+          } else if (
+            payload.eventType === "UPDATE" &&
+            (payload.new as Appointment).status === "canceled" &&
+            (payload.old as Appointment).status !== "canceled"
+          ) {
+            playNotificationSound();
+            const apt = payload.new as Appointment;
+            toast.warning(`⚠️ תור בוטל על ידי הלקוחה: ${apt.client_name}`);
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [isAdmin, queryClient]);
 
   const appointments = useQuery({
     queryKey: ["appointments"],
@@ -113,11 +172,14 @@ function Dashboard() {
       return { id, status };
     },
     onSuccess: (data) => {
-      toast.success("סטטוס התור עודכן");
       if (data.status === "confirmed") {
+        toast.success("התור אושר והודעת אישור נשלחה ללקוחה ✨");
         void dispatchAppointmentNotification(data.id, "appointment_confirmation");
       } else if (data.status === "canceled") {
+        toast.success("התור בוטל והודעת ביטול נשלחה ללקוחה");
         void dispatchAppointmentNotification(data.id, "appointment_cancellation");
+      } else {
+        toast.success("סטטוס התור עודכן לממתין לאישור");
       }
       void queryClient.invalidateQueries({ queryKey: ["appointments"] });
     },
@@ -191,8 +253,16 @@ function Dashboard() {
           </TabsList>
 
           <TabsContent value="schedule" className="mt-6 space-y-8">
-            <ScheduleList title="היום" items={todays} />
-            <ScheduleList title="תורים עתידיים" items={upcoming} />
+            <ScheduleList
+              title="היום"
+              items={todays}
+              onUpdateStatus={(id, status) => updateStatus.mutate({ id, status })}
+            />
+            <ScheduleList
+              title="תורים עתידיים"
+              items={upcoming}
+              onUpdateStatus={(id, status) => updateStatus.mutate({ id, status })}
+            />
           </TabsContent>
 
           <TabsContent value="all" className="mt-6">
@@ -317,7 +387,15 @@ function StatCard({ label, value }: { label: string; value: number }) {
   );
 }
 
-function ScheduleList({ title, items }: { title: string; items: Appointment[] }) {
+function ScheduleList({
+  title,
+  items,
+  onUpdateStatus,
+}: {
+  title: string;
+  items: Appointment[];
+  onUpdateStatus: (id: string, status: string) => void;
+}) {
   return (
     <section>
       <h2 className="text-2xl font-medium">{title}</h2>
@@ -337,8 +415,13 @@ function ScheduleList({ title, items }: { title: string; items: Appointment[] })
                 className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-border bg-card p-4"
               >
                 <div className="min-w-0">
-                  <p className="truncate font-medium">{item.client_name}</p>
-                  <p className="truncate text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <p className="truncate font-medium">{item.client_name}</p>
+                    <Badge className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${STATUS_STYLE[item.status] ?? ""}`}>
+                      {STATUS_LABELS[item.status] || item.status}
+                    </Badge>
+                  </div>
+                  <p className="truncate text-sm text-muted-foreground mt-0.5">
                     {format(new Date(`${item.appointment_date}T00:00:00`), "EEEE, d בMMMM", {
                       locale: he,
                     })}{" "}
@@ -348,9 +431,31 @@ function ScheduleList({ title, items }: { title: string; items: Appointment[] })
                     <p className="mt-1 truncate text-xs text-muted-foreground italic">"{item.notes}"</p>
                   )}
                 </div>
-                <Badge className={`shrink-0 rounded-full ${STATUS_STYLE[item.status] ?? ""}`}>
-                  {STATUS_LABELS[item.status] || item.status}
-                </Badge>
+                <div className="flex items-center gap-2 shrink-0">
+                  {item.status === "pending" && (
+                    <Button
+                      size="sm"
+                      className="h-8 rounded-full text-xs font-medium px-3 bg-emerald-600 hover:bg-emerald-700 text-white gap-1 shadow-sm"
+                      onClick={() => onUpdateStatus(item.id, "confirmed")}
+                    >
+                      <Check className="size-3.5 ml-1" />
+                      אישור תור
+                    </Button>
+                  )}
+                  <Select
+                    value={item.status}
+                    onValueChange={(status) => onUpdateStatus(item.id, status)}
+                  >
+                    <SelectTrigger className="w-28 h-8 rounded-full text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent dir="rtl">
+                      <SelectItem value="pending">ממתין</SelectItem>
+                      <SelectItem value="confirmed">מאושר</SelectItem>
+                      <SelectItem value="canceled">מבוטל</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </li>
             );
           })}
