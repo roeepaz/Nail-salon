@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { dispatchNotificationServerFn } from "@/server/notifications";
 import type { NotificationType } from "./types";
 
 /**
@@ -10,19 +10,10 @@ export async function dispatchAppointmentNotification(
   type: NotificationType,
 ): Promise<void> {
   try {
-    // 1. Try invoking Supabase Edge Function
-    const { data, error } = await supabase.functions.invoke("send-notification", {
-      body: { appointmentId, type },
+    await dispatchNotificationServerFn({
+      data: { appointmentId, type },
     });
-
-    if (error) {
-      console.warn(
-        `[NotificationDispatcher] Edge function invoke returned error (${error.message}). Checking server fallback...`,
-      );
-    } else {
-      return;
-    }
   } catch (err) {
-    console.warn("[NotificationDispatcher] Edge function unavailable, proceeding with client/server fallback:", err);
+    console.warn("[NotificationDispatcher] Notification dispatch returned non-fatal warning:", err);
   }
 }

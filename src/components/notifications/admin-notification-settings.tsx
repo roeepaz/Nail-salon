@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { runReminderSchedulerFn } from "@/server/scheduler";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -131,14 +132,15 @@ export function AdminNotificationSettings() {
   const handleTriggerProcessor = async () => {
     setIsProcessing(true);
     try {
-      const { data, error } = await supabase.functions.invoke("process-appointment-notifications", {
-        body: {},
-      });
+      const res = await runReminderSchedulerFn();
 
-      if (error) {
-        toast.error(`Processor error: ${error.message}`);
+      if (!res.success) {
+        toast.error(`Processor error: ${res.error || "Unknown error"}`);
       } else {
-        toast.success(`Processed reminders successfully! ${JSON.stringify(data?.stats || {})}`);
+        const stats = res.stats;
+        toast.success(
+          `Evaluated ${stats?.evaluated || 0} appointments (24h reminders: ${stats?.reminders24hTriggered || 0}, 1h: ${stats?.reminders1hTriggered || 0})`,
+        );
         void refetchLogs();
       }
     } catch (err) {
