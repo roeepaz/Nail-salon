@@ -153,33 +153,50 @@ export function AdminNotificationSettings() {
 
   const [isSendingTest, setIsSendingTest] = useState(false);
 
-  // Send a test confirmation email for the latest appointment
+  // Send a test confirmation email for the latest appointment (forces send past idempotency guard)
   const handleSendTestEmail = async () => {
     setIsSendingTest(true);
     try {
       const { data: apts } = await supabase
         .from("appointments")
-        .select("id, client_name")
+        .select("id, client_name, user_id")
         .order("created_at", { ascending: false })
-        .limit(1);
+        .limit(5);
 
       const target = apts?.[0];
       if (!target) {
         toast.error("No appointments found in database to test with.");
         return;
       }
+
       const res = await dispatchNotificationServerFn({
         data: {
           appointmentId: target.id,
           type: "appointment_confirmation",
+          channels: ["email"],
+          force: true,
         },
       });
 
-      if (res.success) {
-        toast.success(`Confirmation email sent for ${target.client_name}! Check Resend dashboard.`);
+      if (!res.success) {
+        toast.error(`Error: ${res.error || "Failed to dispatch test email"}`);
+        return;
+      }
+
+      const emailResult = res.results?.find((r) => r.channel === "email");
+      if (!emailResult) {
+        toast.error("No email result returned from notification service.");
+      } else if (emailResult.status === "sent") {
+        toast.success(
+          `Confirmation email sent to ${target.client_name}! (Resend ID: ${emailResult.providerMessageId || "OK"})`,
+        );
+        void refetchLogs();
+      } else if (emailResult.status === "skipped") {
+        toast.warning(`Email was skipped: ${emailResult.errorMessage || "No email available or disabled"}`);
         void refetchLogs();
       } else {
-        toast.error(`Error: ${res.error || "Failed to send test email"}`);
+        toast.error(`Email delivery failed: ${emailResult.errorMessage || "Unknown provider error"}`);
+        void refetchLogs();
       }
     } catch (err) {
       toast.error("Failed to send test: " + (err instanceof Error ? err.message : ""));

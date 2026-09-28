@@ -26,6 +26,7 @@ export interface SendNotificationOptions {
   serviceName?: string;
   appointmentDate?: string;
   appointmentTime?: string;
+  force?: boolean;
 }
 
 export interface AppointmentNotificationData {

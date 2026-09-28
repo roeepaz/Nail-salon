@@ -68,6 +68,21 @@ export class NotificationService {
           .eq("id", targetUserId)
           .maybeSingle();
         if (profile) userProfile = profile;
+
+        if (!userProfile?.email) {
+          try {
+            const { data: authUser } = await this.db.auth.admin.getUserById(targetUserId);
+            if (authUser?.user?.email) {
+              userProfile = {
+                full_name: (authUser.user.user_metadata?.["full_name"] as string) || appointment.client_name,
+                phone: (authUser.user.user_metadata?.["phone"] as string) || appointment.client_phone,
+                email: authUser.user.email,
+              };
+            }
+          } catch {
+            // fallback lookup failure
+          }
+        }
       }
 
       const customerName = options.customerName || userProfile?.full_name || appointment.client_name;
@@ -84,7 +99,7 @@ export class NotificationService {
         .eq("id", "default")
         .maybeSingle();
 
-      if (businessSettings) {
+      if (businessSettings && !options.force) {
         if (type === "appointment_confirmation" && !businessSettings.appointment_confirmation) {
           return [{ channel: "email", status: "skipped", errorMessage: "Confirmation notifications disabled by studio." }];
         }
@@ -129,18 +144,20 @@ export class NotificationService {
         }
       }
 
-      // If user disabled this notification type entirely, skip
-      if (type === "appointment_confirmation" && !prefs.appointment_confirmation) {
-        return [{ channel: "email", status: "skipped", errorMessage: "User disabled confirmation notifications." }];
-      }
-      if (type === "appointment_cancellation" && !prefs.appointment_cancellation) {
-        return [{ channel: "email", status: "skipped", errorMessage: "User disabled cancellation notifications." }];
-      }
-      if (type === "appointment_reminder_24h" && !prefs.appointment_reminder_24h) {
-        return [{ channel: "email", status: "skipped", errorMessage: "User disabled 24h reminders." }];
-      }
-      if (type === "appointment_reminder_1h" && !prefs.appointment_reminder_1h) {
-        return [{ channel: "email", status: "skipped", errorMessage: "User disabled 1h reminders." }];
+      // If user disabled this notification type entirely, skip (unless forced by admin test)
+      if (!options.force) {
+        if (type === "appointment_confirmation" && !prefs.appointment_confirmation) {
+          return [{ channel: "email", status: "skipped", errorMessage: "User disabled confirmation notifications." }];
+        }
+        if (type === "appointment_cancellation" && !prefs.appointment_cancellation) {
+          return [{ channel: "email", status: "skipped", errorMessage: "User disabled cancellation notifications." }];
+        }
+        if (type === "appointment_reminder_24h" && !prefs.appointment_reminder_24h) {
+          return [{ channel: "email", status: "skipped", errorMessage: "User disabled 24h reminders." }];
+        }
+        if (type === "appointment_reminder_1h" && !prefs.appointment_reminder_1h) {
+          return [{ channel: "email", status: "skipped", errorMessage: "User disabled 1h reminders." }];
+        }
       }
 
       // Determine requested channels
@@ -150,27 +167,29 @@ export class NotificationService {
       await Promise.all(
         candidateChannels.map(async (channel) => {
           try {
-            // Check idempotency in notification_logs
-            const { data: existingLog } = await this.db
-              .from("notification_logs")
-              .select("*")
-              .eq("appointment_id", appointmentId)
-              .eq("type", type)
-              .eq("channel", channel)
-              .maybeSingle();
+            // Check idempotency in notification_logs (bypassed if forced test)
+            if (!options.force) {
+              const { data: existingLog } = await this.db
+                .from("notification_logs")
+                .select("*")
+                .eq("appointment_id", appointmentId)
+                .eq("type", type)
+                .eq("channel", channel)
+                .maybeSingle();
 
-            if (existingLog && (existingLog.status === "sent" || existingLog.status === "pending")) {
-              results.push({
-                channel,
-                status: "skipped",
-                errorMessage: `Notification already processed or pending (idempotency guard)`,
-              });
-              return;
+              if (existingLog && (existingLog.status === "sent" || existingLog.status === "pending")) {
+                results.push({
+                  channel,
+                  status: "skipped",
+                  errorMessage: `Notification already processed or pending (idempotency guard)`,
+                });
+                return;
+              }
             }
 
             // Route by channel
             if (channel === "email") {
-              if (!prefs.email_enabled) {
+              if (!prefs.email_enabled && !options.force) {
                 await this.recordLog(targetUserId, appointmentId, type, "email", "skipped", undefined, "User disabled email notifications");
                 results.push({ channel: "email", status: "skipped", errorMessage: "Email disabled by user preferences" });
                 return;
