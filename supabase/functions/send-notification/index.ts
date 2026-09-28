@@ -208,11 +208,11 @@ Deno.serve(async (req) => {
             continue;
           }
 
-          const resendApiKey = Deno.env.get("RESEND_API_KEY");
-          const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") || "Lumière Nails <onboarding@resend.dev>";
+          const resendApiKey = Deno.env.get("RESEND_API_KEY") || Deno.env.get("SMTP_PASS");
+          let fromEmail = Deno.env.get("RESEND_FROM_EMAIL") || Deno.env.get("SMTP_FROM") || "Lumière Nails <onboarding@resend.dev>";
 
           if (!resendApiKey) {
-            results.push({ channel: "email", status: "skipped", error: "RESEND_API_KEY not configured" });
+            results.push({ channel: "email", status: "skipped", error: "Neither RESEND_API_KEY nor SMTP_PASS is configured" });
             continue;
           }
 

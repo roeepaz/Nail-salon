@@ -17,10 +17,15 @@ export class ResendEmailProvider implements EmailProvider {
   private maxRetries: number;
 
   constructor(apiKey?: string, defaultFrom?: string, maxRetries = 2) {
-    this.apiKey = apiKey || process.env["RESEND_API_KEY"] || "";
+    this.apiKey =
+      apiKey ||
+      process.env["RESEND_API_KEY"] ||
+      process.env["SMTP_PASS"] ||
+      "";
     this.defaultFrom =
       defaultFrom ||
       process.env["RESEND_FROM_EMAIL"] ||
+      process.env["SMTP_FROM"] ||
       "Lumière Nails <onboarding@resend.dev>";
     this.maxRetries = maxRetries;
   }
@@ -30,7 +35,7 @@ export class ResendEmailProvider implements EmailProvider {
       return {
         channel: "email",
         status: "skipped",
-        errorMessage: "RESEND_API_KEY is not configured.",
+        errorMessage: "Neither RESEND_API_KEY nor SMTP_PASS is configured.",
       };
     }
 
@@ -66,6 +71,17 @@ export class ResendEmailProvider implements EmailProvider {
         const data = (await response.json()) as { id?: string; message?: string; name?: string };
 
         if (!response.ok) {
+          // If custom domain is not verified yet in Resend, automatically fallback to onboarding@resend.dev
+          if (
+            (response.status === 403 || response.status === 422) &&
+            data.message?.toLowerCase().includes("not verified") &&
+            payload.from !== "Lumière Nails <onboarding@resend.dev>"
+          ) {
+            console.warn(`[Resend] Domain ${payload.from} unverified, falling back to onboarding@resend.dev`);
+            payload.from = "Lumière Nails <onboarding@resend.dev>";
+            continue;
+          }
+
           const isTransient = response.status === 429 || response.status >= 500;
           lastError = `Resend API error (${response.status}): ${data.message || response.statusText}`;
 
