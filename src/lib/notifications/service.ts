@@ -9,29 +9,34 @@ import type {
 import { createEmailProvider, type EmailProvider } from "./providers/email";
 import { MetaWhatsAppCloudProvider, type WhatsAppProvider } from "./providers/whatsapp";
 import { WebPushProvider, type PushProvider } from "./providers/push";
+import { Sms4FreeProvider, type SmsProvider } from "./providers/sms";
 import {
   get1hReminderEmail,
   get24hReminderEmail,
   getCancellationEmail,
   getConfirmationEmail,
 } from "./email-templates";
+import { SERVICES } from "@/lib/salon";
 
 export class NotificationService {
   private db: SupabaseClient<Database>;
   private emailProvider: EmailProvider;
   private whatsappProvider: WhatsAppProvider;
   private pushProvider: PushProvider;
+  private smsProvider: SmsProvider;
 
   constructor(
     db: SupabaseClient<Database>,
     emailProvider?: EmailProvider,
     whatsappProvider?: WhatsAppProvider,
     pushProvider?: PushProvider,
+    smsProvider?: SmsProvider,
   ) {
     this.db = db;
     this.emailProvider = emailProvider || createEmailProvider();
     this.whatsappProvider = whatsappProvider || new MetaWhatsAppCloudProvider();
     this.pushProvider = pushProvider || new WebPushProvider();
+    this.smsProvider = smsProvider || new Sms4FreeProvider();
   }
 
   async sendNotification(options: SendNotificationOptions): Promise<NotificationResult[]> {
@@ -88,7 +93,32 @@ export class NotificationService {
       const customerName = options.customerName || userProfile?.full_name || appointment.client_name;
       const customerEmail = options.recipientEmail || userProfile?.email;
       const customerPhone = options.recipientPhone || userProfile?.phone || appointment.client_phone;
-      const serviceName = options.serviceName || appointment.service_type;
+      // Resolve service name: check DB services table first, fallback to static SERVICES
+      const rawService = options.serviceName || appointment.service_type;
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      let serviceName = options.serviceName;
+
+      if (!serviceName || isUuid.test(serviceName)) {
+        if (rawService) {
+          try {
+            const { data: svc } = await this.db
+              .from("services")
+              .select("name")
+              .eq("id", rawService)
+              .maybeSingle();
+            if (svc?.name) {
+              serviceName = svc.name;
+            }
+          } catch (e) {
+            console.warn("[NotificationService] Error querying service name:", e);
+          }
+        }
+      }
+
+      if (!serviceName || isUuid.test(serviceName)) {
+        const staticSvc = SERVICES.find((s) => s.id === rawService || s.name === rawService);
+        serviceName = staticSvc?.name || rawService;
+      }
       const appointmentDate = options.appointmentDate || appointment.appointment_date;
       const appointmentTime = options.appointmentTime || appointment.appointment_time;
 
@@ -160,8 +190,8 @@ export class NotificationService {
         }
       }
 
-      // Determine requested channels
-      const candidateChannels: NotificationChannel[] = options.channels || ["push", "email", "whatsapp"];
+      // Determine requested channels (push, email, sms by default)
+      const candidateChannels: NotificationChannel[] = options.channels || ["push", "email", "sms"];
 
       // Process channels in parallel with isolated try/catch (Requirement 13)
       await Promise.all(
@@ -315,6 +345,34 @@ export class NotificationService {
 
               await this.recordLog(targetUserId, appointmentId, type, "push", pushStatus, undefined, pushError);
               results.push({ channel: "push", status: pushStatus, errorMessage: pushError });
+            } else if (channel === "sms") {
+              if (prefs && "sms_enabled" in prefs && !(prefs as any).sms_enabled && !options.force) {
+                await this.recordLog(targetUserId, appointmentId, type, "sms", "skipped", undefined, "User disabled SMS notifications");
+                results.push({ channel: "sms", status: "skipped", errorMessage: "SMS disabled by user preferences" });
+                return;
+              }
+              if (!customerPhone) {
+                await this.recordLog(targetUserId, appointmentId, type, "sms", "skipped", undefined, "No customer phone available");
+                results.push({ channel: "sms", status: "skipped", errorMessage: "No customer phone available" });
+                return;
+              }
+
+              const smsMessage = this.getSmsMessage(type, customerName, serviceName, appointmentDate, appointmentTime);
+              const smsRes = await this.smsProvider.sendSms({
+                to: customerPhone,
+                message: smsMessage,
+              });
+
+              await this.recordLog(
+                targetUserId,
+                appointmentId,
+                type,
+                "sms",
+                smsRes.status,
+                smsRes.providerMessageId,
+                smsRes.errorMessage,
+              );
+              results.push(smsRes);
             }
           } catch (channelErr) {
             const errorMsg = channelErr instanceof Error ? channelErr.message : String(channelErr);
@@ -385,6 +443,26 @@ export class NotificationService {
           appointmentId,
           type,
         };
+    }
+  }
+
+  private getSmsMessage(
+    type: NotificationType,
+    customerName: string,
+    serviceName: string,
+    date: string,
+    time: string,
+  ): string {
+    const formattedTime = time.slice(0, 5);
+    switch (type) {
+      case "appointment_confirmation":
+        return `שלום ${customerName} ✨, התור שלך לאליאל ביוטי אושר לטיפול ${serviceName} ב-${date} בשעה ${formattedTime}. מחכה לראותך!`;
+      case "appointment_reminder_24h":
+        return `תזכורת מאליאל ביוטי: שלום ${customerName} 🌸, יש לך תור מחר בשעה ${formattedTime} לטיפול ${serviceName}. מחכה לראותך!`;
+      case "appointment_reminder_1h":
+        return `תזכורת מאליאל ביוטי: שלום ${customerName} 💅, התור שלך ל${serviceName} יחל בעוד שעה (${formattedTime}). נתראה בקרוב!`;
+      case "appointment_cancellation":
+        return `שלום ${customerName}, התור שלך לאליאל ביוטי בתאריך ${date} בשעה ${formattedTime} בוטל .מוזמנת לקבוע תור חדש באתר!`;
     }
   }
 

@@ -38,6 +38,30 @@ async function runMigration() {
       `;
     }
 
+    const existingSalonSettings = await sql`
+      SELECT 1 FROM information_schema.tables 
+      WHERE table_schema = 'public' AND table_name = 'salon_settings'
+    `;
+    if (existingSalonSettings.length > 0) {
+      await sql`
+        INSERT INTO public._schema_migrations (name) 
+        VALUES ('0003_admin_settings.sql')
+        ON CONFLICT (name) DO NOTHING
+      `;
+    }
+
+    const existingEndTime = await sql`
+      SELECT 1 FROM information_schema.columns 
+      WHERE table_schema = 'public' AND table_name = 'blocked_slots' AND column_name = 'end_time'
+    `;
+    if (existingEndTime.length > 0) {
+      await sql`
+        INSERT INTO public._schema_migrations (name) 
+        VALUES ('0004_blocked_slots_time_range.sql')
+        ON CONFLICT (name) DO NOTHING
+      `;
+    }
+
     const appliedRows = await sql`SELECT name FROM public._schema_migrations`;
     const applied = new Set(appliedRows.map((r) => r.name));
 

@@ -1,4 +1,4 @@
-export type NotificationChannel = "push" | "email" | "whatsapp";
+export type NotificationChannel = "push" | "email" | "whatsapp" | "sms";
 
 export type NotificationType =
   | "appointment_confirmation"

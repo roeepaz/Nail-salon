@@ -278,6 +278,58 @@ export function AdminNotificationSettings() {
     }
   };
 
+  const [isSendingTestSms, setIsSendingTestSms] = useState(false);
+
+  // Send a test confirmation SMS for the latest appointment via SMS4Free
+  const handleSendTestSms = async () => {
+    setIsSendingTestSms(true);
+    try {
+      const { data: apts } = await supabase
+        .from("appointments")
+        .select("id, client_name, client_phone, user_id")
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      const target = apts?.[0];
+      if (!target) {
+        toast.error("אין תורים במערכת לבדיקה.");
+        return;
+      }
+
+      const res = await dispatchNotificationServerFn({
+        data: {
+          appointmentId: target.id,
+          type: "appointment_confirmation",
+          channels: ["sms"],
+          force: true,
+        },
+      });
+
+      if (!res.success) {
+        toast.error(`שגיאה: ${res.error || "שליחת SMS נכשלה"}`);
+        return;
+      }
+
+      const smsResult = res.results?.find((r) => r.channel === "sms");
+      if (!smsResult) {
+        toast.error("לא התקבלה תשובה משרת ה-SMS.");
+      } else if (smsResult.status === "sent") {
+        toast.success(`הודעת SMS נשלחה בהצלחה למספר ${target.client_phone}!`);
+        void refetchLogs();
+      } else if (smsResult.status === "skipped") {
+        toast.warning(`משלוח SMS דולג: ${smsResult.errorMessage || "אין סיסמה מוגדרת ב-.env"}`);
+        void refetchLogs();
+      } else {
+        toast.error(`שגיאה במשלוח SMS: ${smsResult.errorMessage || "שגיאה לא ידועה"}`);
+        void refetchLogs();
+      }
+    } catch (err) {
+      toast.error("נכשלה שליחת SMS בדיקה: " + (err instanceof Error ? err.message : ""));
+    } finally {
+      setIsSendingTestSms(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "sent":
@@ -312,11 +364,13 @@ export function AdminNotificationSettings() {
       push: "bg-purple-50 text-purple-700 border-purple-200",
       email: "bg-blue-50 text-blue-700 border-blue-200",
       whatsapp: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      sms: "bg-amber-50 text-amber-700 border-amber-200",
     };
     const labels: Record<string, string> = {
       push: "התראת דפדפן",
       email: "דוא״ל",
       whatsapp: "ווטסאפ",
+      sms: "הודעת SMS",
     };
     return (
       <Badge variant="outline" className={`text-[11px] font-mono capitalize ${colors[channel] || ""}`}>
@@ -442,6 +496,16 @@ export function AdminNotificationSettings() {
             >
               {isSendingTest ? <Loader2 className="size-3.5 animate-spin ml-1" /> : <Send className="size-3.5 ml-1" />}
               שליחת מייל אישור לדוגמה
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-full gap-1.5 text-xs font-medium cursor-pointer border-amber-500/30 text-amber-800 dark:text-amber-300 hover:bg-amber-500/10"
+              onClick={handleSendTestSms}
+              disabled={isSendingTestSms}
+            >
+              {isSendingTestSms ? <Loader2 className="size-3.5 animate-spin ml-1" /> : <Smartphone className="size-3.5 ml-1" />}
+              שליחת SMS אישור לדוגמה
             </Button>
             <Button
               size="sm"

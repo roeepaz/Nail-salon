@@ -41,8 +41,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminNotificationSettings } from "@/components/notifications/admin-notification-settings";
 import { dispatchAppointmentNotification } from "@/lib/notifications/dispatcher";
-import { DAY_NAMES, normalizeTime, toDateKey, SERVICES } from "@/lib/salon";
-import { useServices } from "@/hooks/use-salon-data";
+import { DAY_NAMES, normalizeTime, toDateKey } from "@/lib/salon";
+import { useServices, getServiceName as resolveServiceName } from "@/hooks/use-salon-data";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -211,11 +211,10 @@ function Dashboard() {
   const rows = appointments.data ?? [];
   const todays = rows.filter((a) => a.appointment_date === todayKey && a.status !== "canceled");
   const upcoming = rows.filter((a) => a.appointment_date > todayKey && a.status !== "canceled");
-  const { data: dbServices = SERVICES } = useServices({ activeOnly: false });
+  const { data: dbServices = [] } = useServices({ activeOnly: false });
 
   function getServiceName(serviceType: string) {
-    const found = dbServices.find((s) => s.id === serviceType || s.name === serviceType);
-    return found?.name || serviceType;
+    return resolveServiceName(serviceType, dbServices);
   }
 
 
@@ -276,11 +275,13 @@ function Dashboard() {
               title="היום"
               items={todays}
               onUpdateStatus={(id, status) => updateStatus.mutate({ id, status })}
+              getServiceName={getServiceName}
             />
             <ScheduleList
               title="תורים עתידיים"
               items={upcoming}
               onUpdateStatus={(id, status) => updateStatus.mutate({ id, status })}
+              getServiceName={getServiceName}
             />
           </TabsContent>
 
@@ -407,10 +408,12 @@ function ScheduleList({
   title,
   items,
   onUpdateStatus,
+  getServiceName,
 }: {
   title: string;
   items: Appointment[];
   onUpdateStatus: (id: string, status: string) => void;
+  getServiceName: (type: string) => string;
 }) {
   return (
     <section>
@@ -422,9 +425,6 @@ function ScheduleList({
       ) : (
         <ul className="mt-3 space-y-2">
           {items.map((item) => {
-            const serviceInfo = SERVICES.find(
-              (s) => s.id === item.service_type || s.name === item.service_type,
-            );
             return (
               <li
                 key={item.id}
@@ -441,7 +441,7 @@ function ScheduleList({
                     {format(new Date(`${item.appointment_date}T00:00:00`), "EEEE, d בMMMM", {
                       locale: he,
                     })}{" "}
-                    · {normalizeTime(item.appointment_time)} · {serviceInfo?.name || item.service_type}
+                    · {normalizeTime(item.appointment_time)} · {getServiceName(item.service_type)}
                   </p>
                   {item.notes && (
                     <p className="mt-1 truncate text-xs text-muted-foreground italic">"{item.notes}"</p>

@@ -6,7 +6,8 @@ import { he } from "date-fns/locale";
 
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { toDateKey, SERVICES } from "@/lib/salon";
+import { toDateKey } from "@/lib/salon";
+import { useServices, getServiceName } from "@/hooks/use-salon-data";
 import { Badge } from "@/components/ui/badge";
 
 function getBadge(status: string) {
@@ -26,6 +27,7 @@ export function FloatingAppointments() {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { data: dbServices = [] } = useServices({ activeOnly: false });
 
   useEffect(() => {
     setMounted(true);
@@ -92,16 +94,14 @@ export function FloatingAppointments() {
             
             <div className="max-h-[55vh] overflow-y-auto space-y-3 pr-1 -mr-1 custom-scrollbar">
               {upcoming.map((item) => {
-                const serviceInfo = SERVICES.find(
-                  (s) => s.id === item.service_type || s.name === item.service_type,
-                );
+                const serviceTitle = getServiceName(item.service_type, dbServices);
                 const badge = getBadge(item.status);
                 
                 return (
                   <div key={item.id} className="rounded-2xl bg-white/60 dark:bg-black/40 border border-white/40 dark:border-white/5 p-4 shadow-sm backdrop-blur-sm transition-colors hover:bg-white/80 dark:hover:bg-black/60">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <p className="font-semibold text-foreground">{serviceInfo?.name || item.service_type}</p>
+                        <p className="font-semibold text-foreground">{serviceTitle}</p>
                         <div className="mt-1.5 flex items-center gap-1.5 text-sm text-muted-foreground">
                           <Clock className="size-3.5" />
                           <span className="font-medium text-foreground/80">

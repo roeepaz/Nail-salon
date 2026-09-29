@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-export const runReminderSchedulerFn = createServerFn({ method: "POST" }).handler(async () => {
+export async function runReminderSchedulerCore() {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { NotificationService } = await import("@/lib/notifications/service");
@@ -68,17 +68,17 @@ export const runReminderSchedulerFn = createServerFn({ method: "POST" }).handler
       const diffMs = aptUtcMs - nowMs;
       const diffMinutes = diffMs / (60 * 1000);
 
-      // Check 24-hour reminder (1440 minutes)
+      // Check 24-hour reminder (due between 2 hours and 25 hours from now, idempotency prevents duplicate sends)
       const is24hWindow =
         enable24h &&
-        diffMinutes >= 1440 - window24h &&
-        diffMinutes <= 1440 + window24h;
+        diffMinutes <= 1440 + 60 &&
+        diffMinutes >= 120;
 
-      // Check 1-hour reminder (60 minutes)
+      // Check 1-hour reminder (due within the next 90 minutes until appointment time)
       const is1hWindow =
         enable1h &&
-        diffMinutes >= 60 - window1h &&
-        diffMinutes <= 60 + window1h;
+        diffMinutes <= 90 &&
+        diffMinutes >= 0;
 
       if (is24hWindow) {
         try {
@@ -109,10 +109,12 @@ export const runReminderSchedulerFn = createServerFn({ method: "POST" }).handler
 
     return { success: true, stats };
   } catch (error) {
-    console.error("[runReminderSchedulerFn] Error:", error);
+    console.error("[runReminderSchedulerCore] Error:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : String(error),
     };
   }
-});
+}
+
+export const runReminderSchedulerFn = createServerFn({ method: "POST" }).handler(runReminderSchedulerCore);

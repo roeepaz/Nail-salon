@@ -74,10 +74,34 @@ export const dispatchAdminNotificationServerFn = createServerFn({ method: "POST"
         clientEmail = profile?.email || null;
       }
 
-      const serviceInfo = SERVICES.find(
-        (s) => s.id === appointment.service_type || s.name === appointment.service_type,
-      );
-      const serviceName = serviceInfo?.name || appointment.service_type;
+      // Resolve service name from database first, fallback to static SERVICES
+      let serviceName = appointment.service_type;
+      if (appointment.service_type) {
+        try {
+          const { data: svc } = await supabaseAdmin
+            .from("services")
+            .select("name")
+            .eq("id", appointment.service_type)
+            .maybeSingle();
+          if (svc?.name) {
+            serviceName = svc.name;
+          } else {
+            const serviceInfo = SERVICES.find(
+              (s) => s.id === appointment.service_type || s.name === appointment.service_type,
+            );
+            if (serviceInfo?.name) {
+              serviceName = serviceInfo.name;
+            }
+          }
+        } catch {
+          const serviceInfo = SERVICES.find(
+            (s) => s.id === appointment.service_type || s.name === appointment.service_type,
+          );
+          if (serviceInfo?.name) {
+            serviceName = serviceInfo.name;
+          }
+        }
+      }
 
       // 3. Find admin recipient emails
       const adminEmails = new Set<string>();

@@ -44,9 +44,47 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+let reminderIntervalStarted = false;
+
+function initReminderWorker() {
+  if (reminderIntervalStarted) return;
+  reminderIntervalStarted = true;
+
+  // First run after 15 seconds, then every 5 minutes
+  setTimeout(async () => {
+    try {
+      const { runReminderSchedulerCore } = await import("./server/scheduler");
+      await runReminderSchedulerCore();
+    } catch (e) {
+      console.warn("[BackgroundReminder] Initial check error:", e);
+    }
+  }, 15000);
+
+  setInterval(async () => {
+    try {
+      const { runReminderSchedulerCore } = await import("./server/scheduler");
+      await runReminderSchedulerCore();
+    } catch (e) {
+      console.warn("[BackgroundReminder] Periodic check error:", e);
+    }
+  }, 5 * 60 * 1000);
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      initReminderWorker();
+
+      const url = new URL(request.url);
+      if (url.pathname === "/api/cron/reminders") {
+        const { runReminderSchedulerCore } = await import("./server/scheduler");
+        const res = await runReminderSchedulerCore();
+        return new Response(JSON.stringify(res), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);

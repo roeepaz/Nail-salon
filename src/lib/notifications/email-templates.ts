@@ -149,15 +149,15 @@ export function getConfirmationEmail(data: AppointmentEmailData): { subject: str
 
     <div class="card">
       <div class="detail-row">
-        <span class="detail-label">סוג הטיפול</span>
+        <span class="detail-label">סוג הטיפול: </span>
         <span class="detail-value">${data.serviceName}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">תאריך</span>
+        <span class="detail-label">תאריך: </span>
         <span class="detail-value">${data.date}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">שעה</span>
+        <span class="detail-label">שעה: </span>
         <span class="detail-value">${data.time.slice(0, 5)}</span>
       </div>
       ${data.duration ? `
@@ -199,15 +199,15 @@ export function get24hReminderEmail(data: AppointmentEmailData): { subject: stri
 
     <div class="card">
       <div class="detail-row">
-        <span class="detail-label">סוג הטיפול</span>
+        <span class="detail-label">סוג הטיפול: </span>
         <span class="detail-value">${data.serviceName}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">תאריך</span>
+        <span class="detail-label">תאריך: </span>
         <span class="detail-value">${data.date}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">שעה</span>
+        <span class="detail-label">שעה: </span>
         <span class="detail-value">${data.time.slice(0, 5)}</span>
       </div>
       <div class="detail-row">
@@ -239,15 +239,15 @@ export function get1hReminderEmail(data: AppointmentEmailData): { subject: strin
 
     <div class="card">
       <div class="detail-row">
-        <span class="detail-label">סוג הטיפול</span>
+        <span class="detail-label">סוג הטיפול: </span>
         <span class="detail-value">${data.serviceName}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">שעה</span>
+        <span class="detail-label">שעה: </span>
         <span class="detail-value">${data.time.slice(0, 5)}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">כתובת הסטודיו</span>
+        <span class="detail-label">כתובת הסטודיו: </span>
         <span class="detail-value">${data.location || DEFAULT_LOCATION}</span>
       </div>
     </div>
@@ -274,15 +274,15 @@ export function getCancellationEmail(data: AppointmentEmailData): { subject: str
 
     <div class="card">
       <div class="detail-row">
-        <span class="detail-label">סוג הטיפול</span>
+        <span class="detail-label">סוג הטיפול: </span>
         <span class="detail-value">${data.serviceName}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">תאריך שנקבע</span>
+        <span class="detail-label">תאריך שנקבע: </span>
         <span class="detail-value">${data.date}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">שעה שנקבעה</span>
+        <span class="detail-label">שעה שנקבעה: </span>
         <span class="detail-value">${data.time.slice(0, 5)}</span>
       </div>
 
@@ -337,15 +337,15 @@ export function getAdminNewBookingEmail(data: AdminNotificationEmailData): { sub
         <span class="detail-value" dir="ltr"><a href="mailto:${data.customerEmail}" style="color: #e17085; text-decoration: none;">${data.customerEmail}</a></span>
       </div>` : ""}
       <div class="detail-row">
-        <span class="detail-label">סוג הטיפול</span>
+        <span class="detail-label">סוג הטיפול: </span>
         <span class="detail-value">${data.serviceName}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">תאריך מבוקש</span>
+        <span class="detail-label">תאריך מבוקש: </span>
         <span class="detail-value">${data.date}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">שעה מבוקשת</span>
+        <span class="detail-label">שעה מבוקשת: </span>
         <span class="detail-value">${data.time.slice(0, 5)}</span>
       </div>
       ${data.notes ? `

@@ -108,6 +108,19 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Resolve service name
+    let serviceName = appointment.service_type;
+    if (appointment.service_type) {
+      const { data: svc } = await supabase
+        .from("services")
+        .select("name")
+        .eq("id", appointment.service_type)
+        .maybeSingle();
+      if (svc?.name) {
+        serviceName = svc.name;
+      }
+    }
+
     // Check business notification settings
     const { data: businessSettings } = await supabase
       .from("business_notification_settings")
@@ -234,7 +247,7 @@ Deno.serve(async (req) => {
               <h2 style="color: #2b2325;">${headline}</h2>
               <p>Hi ${customerName},</p>
               <div style="background: #fff8f8; padding: 16px; border-radius: 8px; margin: 16px 0;">
-                <p><strong>Service:</strong> ${appointment.service_type}</p>
+                <p><strong>Service:</strong> ${serviceName}</p>
                 <p><strong>Date:</strong> ${appointment.appointment_date}</p>
                 <p><strong>Time:</strong> ${appointment.appointment_time.slice(0, 5)}</p>
                 <p><strong>Booking Ref:</strong> ${appointment.id.slice(0, 8).toUpperCase()}</p>
@@ -331,7 +344,7 @@ Deno.serve(async (req) => {
                       type: "body",
                       parameters: [
                         { type: "text", text: customerName },
-                        { type: "text", text: appointment.service_type },
+                        { type: "text", text: serviceName },
                         { type: "text", text: appointment.appointment_date },
                         { type: "text", text: appointment.appointment_time.slice(0, 5) },
                       ],
@@ -381,7 +394,7 @@ Deno.serve(async (req) => {
           let sentCount = 0;
           const payload = JSON.stringify({
             title: type === "appointment_cancellation" ? "Appointment Cancelled" : "Lumière Nails",
-            body: `${customerName}, your appointment for ${appointment.service_type} is ${type === "appointment_cancellation" ? "cancelled" : "scheduled for " + appointment.appointment_time.slice(0, 5)}.`,
+            body: `${customerName}, your appointment for ${serviceName} is ${type === "appointment_cancellation" ? "cancelled" : "scheduled for " + appointment.appointment_time.slice(0, 5)}.`,
             url: "/my-bookings",
             appointmentId,
             type,

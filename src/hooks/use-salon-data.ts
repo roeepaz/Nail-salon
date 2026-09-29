@@ -1,4 +1,4 @@
-﻿import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SERVICES as STATIC_SERVICES } from "@/lib/salon";
 import type { Service } from "@/lib/salon";
@@ -73,6 +73,33 @@ export function useServices(opts?: { activeOnly?: boolean }) {
       return filtered.map(toService);
     },
   });
+}
+
+/**
+ * Resolves a service identifier (UUID, slug, or name) to a friendly Hebrew display name.
+ * Searches in custom DB services first, then falls back to static services, and finally returns the string.
+ */
+export function getServiceName(serviceType?: string | null, customServices?: Service[]): string {
+  if (!serviceType) return "";
+  if (customServices && customServices.length > 0) {
+    const found = customServices.find((s) => s.id === serviceType || s.name === serviceType);
+    if (found?.name) return found.name;
+  }
+  const staticFound = STATIC_SERVICES.find((s) => s.id === serviceType || s.name === serviceType);
+  if (staticFound?.name) return staticFound.name;
+  return serviceType;
+}
+
+/**
+ * Finds the full Service object (with duration, price, etc.) by id or name.
+ */
+export function getServiceInfo(serviceType?: string | null, customServices?: Service[]): Service | undefined {
+  if (!serviceType) return undefined;
+  if (customServices && customServices.length > 0) {
+    const found = customServices.find((s) => s.id === serviceType || s.name === serviceType);
+    if (found) return found;
+  }
+  return STATIC_SERVICES.find((s) => s.id === serviceType || s.name === serviceType);
 }
 
 // ── Gallery images ──────────────────────────────────────

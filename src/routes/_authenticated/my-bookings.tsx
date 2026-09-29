@@ -25,7 +25,8 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { SERVICES, toDateKey } from "@/lib/salon";
+import { toDateKey } from "@/lib/salon";
+import { useServices, getServiceName, getServiceInfo } from "@/hooks/use-salon-data";
 
 export const Route = createFileRoute("/_authenticated/my-bookings")({
   ssr: false,
@@ -67,6 +68,7 @@ function MyBookingsPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [cancelingAppointment, setCancelingAppointment] = useState<Appointment | null>(null);
+  const { data: dbServices = [] } = useServices({ activeOnly: false });
 
   const bookingsQuery = useQuery({
     queryKey: ["my-bookings", user?.id],
@@ -176,9 +178,8 @@ function MyBookingsPage() {
                 </h2>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {upcoming.map((item) => {
-                    const serviceInfo = SERVICES.find(
-                      (s) => s.id === item.service_type || s.name === item.service_type,
-                    );
+                    const serviceInfo = getServiceInfo(item.service_type, dbServices);
+                    const serviceTitle = serviceInfo?.name || getServiceName(item.service_type, dbServices);
                     const badge = getBadge(item.status);
                     return (
                       <div
@@ -188,7 +189,7 @@ function MyBookingsPage() {
                         <div>
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-semibold text-lg">
-                              {serviceInfo?.name || item.service_type}
+                              {serviceTitle}
                             </span>
                             <Badge
                               variant="outline"
@@ -252,9 +253,7 @@ function MyBookingsPage() {
                 </h2>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {past.map((item) => {
-                    const serviceInfo = SERVICES.find(
-                      (s) => s.id === item.service_type || s.name === item.service_type,
-                    );
+                    const serviceTitle = getServiceName(item.service_type, dbServices);
                     const badge = getBadge(item.status);
                     return (
                       <div
@@ -263,7 +262,7 @@ function MyBookingsPage() {
                       >
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-medium text-sm">
-                            {serviceInfo?.name || item.service_type}
+                            {serviceTitle}
                           </span>
                           <Badge
                             variant="outline"
@@ -303,8 +302,7 @@ function MyBookingsPage() {
               <AlertDialogDescription>
                 האם את בטוחה שברצונך לבטל את התור ל-{" "}
                 <span className="font-semibold text-foreground">
-                  {SERVICES.find((s) => s.id === cancelingAppointment?.service_type)?.name ||
-                    cancelingAppointment?.service_type}{" "}
+                  {getServiceName(cancelingAppointment?.service_type, dbServices)}{" "}
                   בתאריך {cancelingAppointment?.appointment_date} בשעה{" "}
                   {cancelingAppointment?.appointment_time.slice(0, 5)}
                 </span>
