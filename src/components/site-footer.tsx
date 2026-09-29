@@ -14,8 +14,11 @@ export function SiteFooter() {
     <footer className="border-t border-border/60 bg-secondary/50">
       <div className="mx-auto grid max-w-6xl gap-8 px-5 py-14 sm:grid-cols-3">
         <div>
-          <h3 className="font-display text-2xl font-medium">{name}</h3>
-          <p className="mt-3 max-w-xs text-sm text-muted-foreground">{about}</p>
+          <div className="flex items-center gap-3 mb-3">
+            <img src="/Logo.jpg" alt={name} className="size-10 rounded-full object-cover shadow-sm" />
+            <h3 className="font-display text-2xl font-medium">{name}</h3>
+          </div>
+          <p className="max-w-xs text-sm text-muted-foreground">{about}</p>
         </div>
         <div className="space-y-3 text-sm text-muted-foreground">
           <p className="flex items-center gap-2">
@@ -31,10 +34,6 @@ export function SiteFooter() {
         <div className="text-sm">
           <Link to="/book" className="text-primary font-medium hover:underline">
             קביעת תור אונליין
-          </Link>
-          <br />
-          <Link to="/auth" className="mt-2 inline-block text-muted-foreground hover:underline">
-            כניסת מנהלת סטודיו
           </Link>
         </div>
       </div>

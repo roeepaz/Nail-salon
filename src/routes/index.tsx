@@ -54,7 +54,7 @@ function Landing() {
             <h1 className="mt-4 text-5xl leading-[1.1] md:text-7xl">
               יופי מדויק,
               <br />
-              <span className="text-gradient-rose italic font-medium">מגע של יוקרה.</span>
+              <span className="text-gradient-rose italic font-medium pr-2">מגע של יוקרה.</span>
             </h1>
             <p className="mt-6 max-w-md text-base text-muted-foreground leading-relaxed">
               הכנה יסודית, קווים נקיים ועמידות מושלמת לשבועות. כיסא אחד, לקוחה אחת בכל פעם, ביחס אישי ומפנק.

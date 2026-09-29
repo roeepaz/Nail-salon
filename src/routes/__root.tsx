@@ -83,7 +83,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         property: "og:description",
         content: "אליאל ביוטי - סטודיו בוטיק ללק ג'ל, מבנה אנטומי ופדיקור. הזמנת תור אונליין.",
       },
+      { property: "og:image", content: "/Logo.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "/Logo.jpg" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -93,7 +95,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700&family=Rubik:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@300;400;500;600&display=swap",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/Logo.jpg", type: "image/jpeg" },
     ],
   }),
   shellComponent: RootShell,

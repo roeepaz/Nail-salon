@@ -11,8 +11,8 @@ export interface AppointmentEmailData {
   supportPhone?: string;
 }
 
-const DEFAULT_LOCATION = "סטודיו אליאל ביוטי, רחוב דיזנגוף 120, תל אביב";
-const DEFAULT_PHONE = "050-123-4567";
+const DEFAULT_LOCATION = "סטודיו אליאל ביוטי, צהלון, חריש";
+const DEFAULT_PHONE = "052-837-1227";
 
 function baseEmailLayout(content: string, previewText: string): string {
   return `<!DOCTYPE html>
@@ -75,6 +75,7 @@ function baseEmailLayout(content: string, previewText: string): string {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 12px;
       padding: 10px 0;
       border-bottom: 1px solid #f6dedf;
       font-size: 14px;
@@ -157,7 +158,7 @@ export function getConfirmationEmail(data: AppointmentEmailData): { subject: str
       </div>
       <div class="detail-row">
         <span class="detail-label">שעה</span>
-        <span class="detail-value">${data.time}</span>
+        <span class="detail-value">${data.time.slice(0, 5)}</span>
       </div>
       ${data.duration ? `
       <div class="detail-row">
@@ -173,10 +174,7 @@ export function getConfirmationEmail(data: AppointmentEmailData): { subject: str
         <span class="detail-label">כתובת הסטודיו</span>
         <span class="detail-value">${data.location || DEFAULT_LOCATION}</span>
       </div>
-      <div class="detail-row">
-        <span class="detail-label">מספר הזמנה</span>
-        <span class="detail-value" style="font-family: monospace; font-size: 13px;">${data.bookingId.slice(0, 8).toUpperCase()}</span>
-      </div>
+
     </div>
 
     <p style="font-size: 13px; color: #7d6b6e; line-height: 1.6; margin: 16px 0;">
@@ -186,12 +184,12 @@ export function getConfirmationEmail(data: AppointmentEmailData): { subject: str
 
   return {
     subject,
-    html: baseEmailLayout(content, `התור שלך לטיפול ${data.serviceName} בתאריך ${data.date} בשעה ${data.time} אושר!`),
+    html: baseEmailLayout(content, `התור שלך לטיפול ${data.serviceName} בתאריך ${data.date} בשעה ${data.time.slice(0, 5)} אושר!`),
   };
 }
 
 export function get24hReminderEmail(data: AppointmentEmailData): { subject: string; html: string } {
-  const subject = `תזכורת: התור שלך מחר ב-${data.time} 💅 | אליאל ביוטי`;
+  const subject = `תזכורת: התור שלך מחר ב-${data.time.slice(0, 5)} 💅 | אליאל ביוטי`;
   const content = `
     <h2 style="margin: 0 0 12px; font-size: 22px; font-weight: 600; color: #2b2325;">התור שלך מחר! 💅</h2>
     <p style="margin: 0 0 16px; font-size: 15px; color: #524447; line-height: 1.5;">
@@ -210,16 +208,13 @@ export function get24hReminderEmail(data: AppointmentEmailData): { subject: stri
       </div>
       <div class="detail-row">
         <span class="detail-label">שעה</span>
-        <span class="detail-value">${data.time}</span>
+        <span class="detail-value">${data.time.slice(0, 5)}</span>
       </div>
       <div class="detail-row">
         <span class="detail-label">כתובת הסטודיו</span>
         <span class="detail-value">${data.location || DEFAULT_LOCATION}</span>
       </div>
-      <div class="detail-row">
-        <span class="detail-label">מספר הזמנה</span>
-        <span class="detail-value" style="font-family: monospace;">${data.bookingId.slice(0, 8).toUpperCase()}</span>
-      </div>
+
     </div>
 
     <p style="font-size: 13px; color: #7d6b6e; line-height: 1.6; margin: 16px 0;">
@@ -229,7 +224,7 @@ export function get24hReminderEmail(data: AppointmentEmailData): { subject: stri
 
   return {
     subject,
-    html: baseEmailLayout(content, `תזכורת: התור שלך לטיפול ${data.serviceName} נקבע למחר בשעה ${data.time}.`),
+    html: baseEmailLayout(content, `תזכורת: התור שלך לטיפול ${data.serviceName} נקבע למחר בשעה ${data.time.slice(0, 5)}.`),
   };
 }
 
@@ -239,7 +234,7 @@ export function get1hReminderEmail(data: AppointmentEmailData): { subject: strin
     <h2 style="margin: 0 0 12px; font-size: 22px; font-weight: 600; color: #2b2325;">נתראה בעוד שעה! 🌸</h2>
     <p style="margin: 0 0 16px; font-size: 15px; color: #524447; line-height: 1.5;">
       שלום <strong>${data.customerName}</strong>,<br>
-      התור שלך בסטודיו <strong>אליאל ביוטי</strong> יחל בעוד כשעה, בשעה <strong>${data.time}</strong>.
+      התור שלך בסטודיו <strong>אליאל ביוטי</strong> יחל בעוד כשעה, בשעה <strong>${data.time.slice(0, 5)}</strong>.
     </p>
 
     <div class="card">
@@ -249,7 +244,7 @@ export function get1hReminderEmail(data: AppointmentEmailData): { subject: strin
       </div>
       <div class="detail-row">
         <span class="detail-label">שעה</span>
-        <span class="detail-value">${data.time}</span>
+        <span class="detail-value">${data.time.slice(0, 5)}</span>
       </div>
       <div class="detail-row">
         <span class="detail-label">כתובת הסטודיו</span>
@@ -264,7 +259,7 @@ export function get1hReminderEmail(data: AppointmentEmailData): { subject: strin
 
   return {
     subject,
-    html: baseEmailLayout(content, `תזכורת: התור שלך לטיפול ${data.serviceName} יתחיל בעוד שעה בשעה ${data.time}.`),
+    html: baseEmailLayout(content, `תזכורת: התור שלך לטיפול ${data.serviceName} יתחיל בעוד שעה בשעה ${data.time.slice(0, 5)}.`),
   };
 }
 
@@ -274,7 +269,7 @@ export function getCancellationEmail(data: AppointmentEmailData): { subject: str
     <h2 style="margin: 0 0 12px; font-size: 22px; font-weight: 600; color: #2b2325;">התור בוטל</h2>
     <p style="margin: 0 0 16px; font-size: 15px; color: #524447; line-height: 1.5;">
       שלום <strong>${data.customerName}</strong>,<br>
-      התור שנקבע לתאריך <strong>${data.date} בשעה ${data.time}</strong> בוטל.
+      התור שנקבע לתאריך <strong>${data.date} בשעה ${data.time.slice(0, 5)}</strong> בוטל.
     </p>
 
     <div class="card">
@@ -288,12 +283,9 @@ export function getCancellationEmail(data: AppointmentEmailData): { subject: str
       </div>
       <div class="detail-row">
         <span class="detail-label">שעה שנקבעה</span>
-        <span class="detail-value">${data.time}</span>
+        <span class="detail-value">${data.time.slice(0, 5)}</span>
       </div>
-      <div class="detail-row">
-        <span class="detail-label">מספר הזמנה</span>
-        <span class="detail-value" style="font-family: monospace;">${data.bookingId.slice(0, 8).toUpperCase()}</span>
-      </div>
+
     </div>
 
     <p style="font-size: 14px; color: #524447; line-height: 1.6; margin: 16px 0;">
@@ -354,7 +346,7 @@ export function getAdminNewBookingEmail(data: AdminNotificationEmailData): { sub
       </div>
       <div class="detail-row">
         <span class="detail-label">שעה מבוקשת</span>
-        <span class="detail-value">${data.time}</span>
+        <span class="detail-value">${data.time.slice(0, 5)}</span>
       </div>
       ${data.notes ? `
       <div class="detail-row">
@@ -376,7 +368,7 @@ export function getAdminNewBookingEmail(data: AdminNotificationEmailData): { sub
 
   return {
     subject,
-    html: baseEmailLayout(content, `תור חדש מ-${data.customerName} לטיפול ${data.serviceName} ב-${data.date} בשעה ${data.time} ממתין לאישורך.`),
+    html: baseEmailLayout(content, `תור חדש מ-${data.customerName} לטיפול ${data.serviceName} ב-${data.date} בשעה ${data.time.slice(0, 5)} ממתין לאישורך.`),
   };
 }
 
@@ -410,7 +402,7 @@ export function getAdminBookingCanceledEmail(data: AdminNotificationEmailData): 
       </div>
       <div class="detail-row">
         <span class="detail-label">שעה</span>
-        <span class="detail-value">${data.time}</span>
+        <span class="detail-value">${data.time.slice(0, 5)}</span>
       </div>
     </div>
 
@@ -423,6 +415,6 @@ export function getAdminBookingCanceledEmail(data: AdminNotificationEmailData): 
 
   return {
     subject,
-    html: baseEmailLayout(content, `התור של ${data.customerName} לטיפול ${data.serviceName} ב-${data.date} בשעה ${data.time} בוטל.`),
+    html: baseEmailLayout(content, `התור של ${data.customerName} לטיפול ${data.serviceName} ב-${data.date} בשעה ${data.time.slice(0, 5)} בוטל.`),
   };
 }
