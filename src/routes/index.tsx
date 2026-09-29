@@ -4,6 +4,7 @@ import { ArrowLeft, Heart, Leaf, Sparkles } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
+import { FloatingAppointments } from "@/components/floating-appointments";
 import { useSalonInfo, useServices, useGalleryImages } from "@/hooks/use-salon-data";
 import heroImage from "@/assets/hero.jpg";
 import gallery1 from "@/assets/gallery-1.jpg";
@@ -152,6 +153,7 @@ function Landing() {
       </section>
 
       <SiteFooter />
+      <FloatingAppointments />
     </div>
   );
 }
