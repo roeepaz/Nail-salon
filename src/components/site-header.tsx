@@ -32,7 +32,7 @@ export function SiteHeader() {
       <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 py-4">
         <Link to="/" className="flex min-w-0 items-center gap-3">
           <img src="/Logo.jpg" alt="לוגו" className="size-8 rounded-full object-cover shadow-sm" />
-          <span className="truncate font-display text-xl font-medium tracking-wide">אליאל ביוטי</span>
+          <span className="truncate text-[24px] tracking-widest text-primary" style={{ fontFamily: "'Bellefair', serif" }}>אליאל ביוטי</span>
         </Link>
         <div className="flex shrink-0 items-center gap-3">
           {!isLoading && (
