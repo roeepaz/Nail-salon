@@ -429,8 +429,8 @@ export class NotificationService {
         };
       case "appointment_reminder_1h":
         return {
-          title: "התור שלך בעוד שעה 🌸",
-          body: `התור לטיפול ${serviceName} יתחיל בעוד שעה בשעה ${time}. נתראה בקרוב!`,
+          title: "התור שלך מתקרב 🌸",
+          body: `התור לטיפול ${serviceName} יתחיל בקרוב בשעה ${time}. נתראה בקרוב!`,
           url: "/my-bookings",
           appointmentId,
           type,
@@ -460,7 +460,7 @@ export class NotificationService {
       case "appointment_reminder_24h":
         return `תזכורת מאליאל ביוטי: שלום ${customerName} 🌸, יש לך תור מחר בשעה ${formattedTime} לטיפול ${serviceName}. מחכה לראותך!`;
       case "appointment_reminder_1h":
-        return `תזכורת מאליאל ביוטי: שלום ${customerName} 💅, התור שלך ל${serviceName} יחל בעוד שעה (${formattedTime}). נתראה בקרוב!`;
+        return `תזכורת מאליאל ביוטי: שלום ${customerName} 💅, התור שלך ל${serviceName} יחל בקרוב (${formattedTime}). נתראה בקרוב!`;
       case "appointment_cancellation":
         return `שלום ${customerName}, התור שלך לאליאל ביוטי בתאריך ${date} בשעה ${formattedTime} בוטל .מוזמנת לקבוע תור חדש באתר!`;
     }

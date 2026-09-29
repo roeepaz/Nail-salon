@@ -76,6 +76,13 @@ async function setupAdmin() {
     process.exit(1);
   }
 
+  // Ensure profile exists with current email
+  await supabase.from("profiles").upsert({
+    id: userId,
+    email: ADMIN_EMAIL,
+    full_name: "מנהלת הסטודיו",
+  });
+
   console.log("Admin setup complete!");
 }
 

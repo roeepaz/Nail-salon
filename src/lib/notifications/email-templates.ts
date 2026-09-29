@@ -229,12 +229,12 @@ export function get24hReminderEmail(data: AppointmentEmailData): { subject: stri
 }
 
 export function get1hReminderEmail(data: AppointmentEmailData): { subject: string; html: string } {
-  const subject = `נתראה בעוד שעה! 🌸 | אליאל ביוטי`;
+  const subject = `התור שלך מתקרב! 🌸 | אליאל ביוטי`;
   const content = `
-    <h2 style="margin: 0 0 12px; font-size: 22px; font-weight: 600; color: #2b2325;">נתראה בעוד שעה! 🌸</h2>
+    <h2 style="margin: 0 0 12px; font-size: 22px; font-weight: 600; color: #2b2325;">נתראה עוד מעט! 🌸</h2>
     <p style="margin: 0 0 16px; font-size: 15px; color: #524447; line-height: 1.5;">
       שלום <strong>${data.customerName}</strong>,<br>
-      התור שלך בסטודיו <strong>אליאל ביוטי</strong> יחל בעוד כשעה, בשעה <strong>${data.time.slice(0, 5)}</strong>.
+      התור שלך בסטודיו <strong>אליאל ביוטי</strong> יחל בקרוב, בשעה <strong>${data.time.slice(0, 5)}</strong>.
     </p>
 
     <div class="card">
@@ -259,7 +259,7 @@ export function get1hReminderEmail(data: AppointmentEmailData): { subject: strin
 
   return {
     subject,
-    html: baseEmailLayout(content, `תזכורת: התור שלך לטיפול ${data.serviceName} יתחיל בעוד שעה בשעה ${data.time.slice(0, 5)}.`),
+    html: baseEmailLayout(content, `תזכורת: התור שלך לטיפול ${data.serviceName} יתחיל בקרוב בשעה ${data.time.slice(0, 5)}.`),
   };
 }
 
