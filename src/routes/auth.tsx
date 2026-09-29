@@ -20,12 +20,12 @@ export const Route = createFileRoute("/auth")({
   validateSearch: (search) => authSearchSchema.parse(search),
   head: () => ({
     meta: [
-      { title: "התחברות והרשמה — אליאל ביוטי" },
+      { title: "התחברות והרשמה - אליאל ביוטי" },
       {
         name: "description",
         content: "התחברי או פתחי חשבון לקביעת תורים בסטודיו אליאל ביוטי.",
       },
-      { property: "og:title", content: "התחברות והרשמה — אליאל ביוטי" },
+      { property: "og:title", content: "התחברות והרשמה - אליאל ביוטי" },
       {
         property: "og:description",
         content: "התחברי או פתחי חשבון לקביעת תורים בסטודיו.",

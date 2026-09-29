@@ -1,4 +1,4 @@
-# Lumière Nails — Appointment Notification System Documentation
+# Lumière Nails - Appointment Notification System Documentation
 
 Production-grade, multi-channel appointment notification system supporting **Browser/Web Push Notifications**, **Email (Resend)**, and **Official WhatsApp Business Platform / Cloud API**, with **scheduled reminder workers**, **idempotency & duplicate prevention**, and **strict server-side credential isolation**.
 

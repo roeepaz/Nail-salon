@@ -430,7 +430,7 @@ export function AdminNotificationSettings() {
           <div className="flex items-center gap-2">
             <Sliders className="size-5 text-primary" />
             <h3 className="text-lg font-display font-medium text-foreground">
-              הגדרות התראות סטודיו — אליאל ביוטי
+              הגדרות התראות סטודיו - אליאל ביוטי
             </h3>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -620,7 +620,7 @@ export function AdminNotificationSettings() {
                           {log.error_message}
                         </span>
                       ) : (
-                        "—"
+                        "-"
                       )}
                     </TableCell>
                     <TableCell className="font-mono text-[11px] text-muted-foreground" dir="ltr">

@@ -39,7 +39,7 @@ export function SiteFooter() {
         </div>
       </div>
       <p className="border-t border-border/60 py-5 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} אליאל ביוטי — כל הזכויות שמורות.
+        © {new Date().getFullYear()} אליאל ביוטי - כל הזכויות שמורות.
       </p>
     </footer>
   );

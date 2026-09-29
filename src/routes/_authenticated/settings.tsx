@@ -45,7 +45,7 @@ import { useAuth } from "@/hooks/use-auth";
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
     meta: [
-      { title: "עריכה — ניהול סטודיו אליאל ביוטי" },
+      { title: "עריכה - ניהול סטודיו אליאל ביוטי" },
       { name: "description", content: "ניהול פרטי הסטודיו, תפריט טיפולים וגלריה." },
       { name: "robots", content: "noindex" },
     ],
@@ -97,7 +97,7 @@ function SettingsPage() {
           <div className="flex min-w-0 items-center gap-2">
             <Settings2 className="size-5 shrink-0 text-primary" />
             <span className="truncate font-display text-xl font-medium tracking-wide">
-              עריכה — ניהול סטודיו
+              עריכה - ניהול סטודיו
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -257,7 +257,7 @@ function ServicesPanel() {
     },
     onError: (err) => {
       console.error("saveService error:", err);
-      toast.error("שגיאה בשמירת הטיפול — בדקי את ה-console");
+      toast.error("שגיאה בשמירת הטיפול - בדקי את ה-console");
     },
   });
 

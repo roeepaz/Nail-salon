@@ -72,13 +72,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "אליאל ביוטי — סטודיו לציפורניים וטיפוח" },
+      { title: "אליאל ביוטי - סטודיו לציפורניים וטיפוח" },
       {
         name: "description",
         content: "אליאל ביוטי - סטודיו בוטיק ללק ג'ל, מבנה אנטומי ופדיקור. הזמנת תור אונליין בקלות ובמהירות.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:title", content: "אליאל ביוטי — סטודיו לציפורניים וטיפוח" },
+      { property: "og:title", content: "אליאל ביוטי - סטודיו לציפורניים וטיפוח" },
       {
         property: "og:description",
         content: "אליאל ביוטי - סטודיו בוטיק ללק ג'ל, מבנה אנטומי ופדיקור. הזמנת תור אונליין.",

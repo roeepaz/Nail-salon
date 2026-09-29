@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design system — Gel polish salon.
+ * Design system - Gel polish salon.
  * Palette: soft blush pink, warm nude, porcelain white, deep rose text.
  */
 
@@ -87,12 +87,10 @@
   --gold: oklch(0.76 0.09 78);
   --success: oklch(0.6 0.1 155);
 
-  --gradient-hero: linear-gradient(
-    160deg,
-    oklch(0.99 0.006 60) 0%,
-    oklch(0.955 0.028 25) 55%,
-    oklch(0.93 0.036 35) 100%
-  );
+  --gradient-hero: linear-gradient(160deg,
+      oklch(0.99 0.006 60) 0%,
+      oklch(0.955 0.028 25) 55%,
+      oklch(0.93 0.036 35) 100%);
   --gradient-rose: linear-gradient(120deg, oklch(0.68 0.098 12), oklch(0.78 0.072 45));
   --shadow-soft: 0 18px 50px -24px color-mix(in oklab, var(--rose) 45%, transparent);
   --shadow-card: 0 10px 34px -20px color-mix(in oklab, var(--rose) 38%, transparent);

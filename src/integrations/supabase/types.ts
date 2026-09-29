@@ -78,6 +78,7 @@ export type Database = {
         Row: {
           block_date: string;
           block_time: string | null;
+          end_time: string | null;
           created_at: string;
           id: string;
           reason: string | null;
@@ -85,6 +86,7 @@ export type Database = {
         Insert: {
           block_date: string;
           block_time?: string | null;
+          end_time?: string | null;
           created_at?: string;
           id?: string;
           reason?: string | null;
@@ -92,6 +94,7 @@ export type Database = {
         Update: {
           block_date?: string;
           block_time?: string | null;
+          end_time?: string | null;
           created_at?: string;
           id?: string;
           reason?: string | null;

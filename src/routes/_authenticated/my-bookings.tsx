@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/my-bookings")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "התורים שלי — אליאל ביוטי" },
+      { title: "התורים שלי - אליאל ביוטי" },
       { name: "description", content: "צפייה וניהול התורים שלך בסטודיו אליאל ביוטי." },
     ],
   }),

@@ -14,13 +14,13 @@ import gallery3 from "@/assets/gallery-3.jpg";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "אליאל ביוטי — סטודיו לציפורניים וטיפוח" },
+      { title: "אליאל ביוטי - סטודיו לציפורניים וטיפוח" },
       {
         name: "description",
         content:
           "סטודיו בוטיק ללק ג'ל, מבנה אנטומי ופדיקור. בחרי טיפול, קבעי מועד ותאמי תור אונליין תוך דקה.",
       },
-      { property: "og:title", content: "אליאל ביוטי — סטודיו לציפורניים וטיפוח" },
+      { property: "og:title", content: "אליאל ביוטי - סטודיו לציפורניים וטיפוח" },
       {
         property: "og:description",
         content: "קביעת תורים אונליין ללק ג'ל, מבנה אנטומי ופדיקור.",

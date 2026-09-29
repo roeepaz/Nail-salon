@@ -69,9 +69,39 @@ export function toDateKey(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-function minutesOf(time: string): number {
+export function minutesOf(time: string): number {
   const parts = normalizeTime(time).split(":").map(Number);
   return (parts[0] ?? 0) * 60 + (parts[1] ?? 0);
+}
+
+export function isSlotBlocked(
+  slotTime: string,
+  blocks: { block_time: string | null; end_time?: string | null }[],
+  durationMinutes = SLOT_MINUTES,
+): boolean {
+  const slotStart = minutesOf(slotTime);
+  const slotEnd = slotStart + durationMinutes;
+
+  for (const block of blocks) {
+    if (!block.block_time) {
+      return true;
+    }
+
+    const blockStart = minutesOf(block.block_time);
+
+    if (block.end_time) {
+      const blockEnd = minutesOf(block.end_time);
+      if (slotStart < blockEnd && slotEnd > blockStart) {
+        return true;
+      }
+    } else {
+      if (slotStart === blockStart || (slotStart < blockStart + durationMinutes && slotEnd > blockStart)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 function fromMinutes(total: number): string {

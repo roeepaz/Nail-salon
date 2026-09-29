@@ -22,6 +22,7 @@ import { z } from "zod";
 
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
@@ -35,6 +36,7 @@ import { dispatchAdminNotification } from "@/lib/notifications/dispatcher";
 import {
   buildDaySlots,
   isPastSlot,
+  isSlotBlocked,
   normalizeTime,
   toDateKey,
   type Service,
@@ -44,13 +46,13 @@ import {
 export const Route = createFileRoute("/book")({
   head: () => ({
     meta: [
-      { title: "קביעת תור — אליאל ביוטי" },
+      { title: "קביעת תור - אליאל ביוטי" },
       {
         name: "description",
         content:
           "בחרי את הטיפול המבוקש, קבעי מועד נוח ושרייני תור אונליין בסטודיו אליאל ביוטי.",
       },
-      { property: "og:title", content: "קביעת תור — אליאל ביוטי" },
+      { property: "og:title", content: "קביעת תור - אליאל ביוטי" },
       {
         property: "og:description",
         content: "בחרי טיפול, שעה פנויה ואשרי את התור שלך בקלות.",
@@ -123,7 +125,7 @@ function BookPage() {
 
       const [hours, blocked, taken] = await Promise.all([
         supabase.from("working_hours").select("*").eq("day_of_week", weekday).maybeSingle(),
-        supabase.from("blocked_slots").select("block_time").eq("block_date", key),
+        supabase.from("blocked_slots").select("block_time, end_time").eq("block_date", key),
         supabase.rpc("get_taken_times", { _date: key }),
       ]);
 
@@ -134,15 +136,15 @@ function BookPage() {
       if (!hours.data || !hours.data.is_open) return [] as string[];
       if ((blocked.data ?? []).some((b) => b.block_time === null)) return [] as string[];
 
-      const blockedTimes = new Set(
-        (blocked.data ?? []).filter((b) => b.block_time).map((b) => normalizeTime(b.block_time!)),
-      );
       const takenTimes = new Set(
         ((taken.data ?? []) as { taken_time: string }[]).map((t) => normalizeTime(t.taken_time)),
       );
 
       return buildDaySlots(hours.data.open_time, hours.data.close_time).filter(
-        (slot) => !blockedTimes.has(slot) && !takenTimes.has(slot) && !isPastSlot(key, slot),
+        (slot) =>
+          !isSlotBlocked(slot, blocked.data ?? []) &&
+          !takenTimes.has(slot) &&
+          !isPastSlot(key, slot),
       );
     },
   });
@@ -311,7 +313,7 @@ function BookPage() {
               <div>
                 <h1 className="text-4xl font-medium">בחירת טיפול</h1>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  מתלבטת? בחרי את הטיפול הקרוב ביותר — נוכל להתאים בסטודיו.
+                  מתלבטת? בחרי את הטיפול הקרוב ביותר - נוכל להתאים בסטודיו.
                 </p>
               </div>
               {!user && (
@@ -361,7 +363,7 @@ function BookPage() {
               {service?.name} · {service?.price} ({service?.duration})
             </p>
 
-            <div className="mt-6 flex justify-center rounded-3xl border border-border bg-card p-3 shadow-soft" dir="rtl">
+            <div className="mt-6 w-full max-w-md mx-auto rounded-3xl border border-border/80 bg-card p-4 sm:p-5 shadow-soft" dir="rtl">
               <Calendar
                 locale={he}
                 mode="single"
@@ -371,27 +373,51 @@ function BookPage() {
                   setTime(null);
                 }}
                 disabled={{ before: today }}
-                className={cn("pointer-events-auto")}
+                className="w-full p-0 pointer-events-auto"
               />
+              <div className="mt-3.5 flex items-center justify-center gap-5 border-t border-border/50 pt-2.5 text-[11px] text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <span className="size-2 rounded-full bg-primary inline-block" />
+                  תאריך נבחר
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="size-2 rounded-full border border-primary/50 bg-primary/10 inline-block" />
+                  היום
+                </span>
+              </div>
             </div>
 
             {date && (
-              <div className="mt-6">
-                <p className="eyebrow">מועדים פנויים ליום {format(date, "EEEE, d בMMMM", { locale: he })}</p>
+              <div className="mt-5 w-full max-w-md mx-auto rounded-3xl border border-border/80 bg-card p-4 sm:p-5 shadow-soft">
+                <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-2.5">
+                  <div>
+                    <p className="text-[11px] font-medium text-muted-foreground">מועדים פנויים</p>
+                    <h3 className="text-base font-medium text-foreground">
+                      יום {format(date, "EEEE, d בMMMM yyyy", { locale: he })}
+                    </h3>
+                  </div>
+                  {time && (
+                    <Badge variant="outline" className="border-primary/40 bg-primary/5 text-primary text-xs font-mono font-medium px-2 py-0.5">
+                      {time} נבחר
+                    </Badge>
+                  )}
+                </div>
+
                 {availability.isLoading ? (
-                  <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="size-4 animate-spin ml-2" /> בודק שעות פנויות ביומן…
-                  </p>
+                  <div className="py-6 flex flex-col items-center justify-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="size-4 animate-spin text-primary" />
+                    <span>בודק שעות פנויות ביומן…</span>
+                  </div>
                 ) : availability.data && availability.data.length > 0 ? (
-                  <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  <div className="mt-3.5 grid grid-cols-3 gap-2 sm:grid-cols-4">
                     {availability.data.map((slot) => (
                       <button
                         key={slot}
                         type="button"
                         onClick={() => setTime(slot)}
                         className={cn(
-                          "rounded-xl border border-border bg-card py-3 text-sm font-medium transition-colors hover:border-primary cursor-pointer",
-                          time === slot && "border-primary bg-primary text-primary-foreground",
+                          "rounded-xl border border-border/80 bg-background py-2.5 text-xs sm:text-sm font-mono font-medium transition-all hover:border-primary hover:bg-primary/5 hover:scale-[1.02] cursor-pointer",
+                          time === slot && "border-primary bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-[1.02]",
                         )}
                       >
                         {slot}
@@ -399,14 +425,14 @@ function BookPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="mt-4 rounded-2xl bg-secondary p-4 text-sm text-muted-foreground">
-                    אין תורים פנויים ביום זה. אנא בחרי תאריך אחר.
-                  </p>
+                  <div className="mt-3.5 rounded-2xl bg-secondary/60 p-4 text-center text-xs text-muted-foreground">
+                    אין תורים פנויים ביום זה. אנא בחרי תאריך אחר בלוח השנה.
+                  </div>
                 )}
               </div>
             )}
 
-            <div className="mt-8 flex gap-3">
+            <div className="mt-6 w-full max-w-md mx-auto flex gap-3">
               <Button variant="outline" className="rounded-full" onClick={() => setStep(0)}>
                 <ArrowRight className="size-4 ml-1" /> חזרה
               </Button>

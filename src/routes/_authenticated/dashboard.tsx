@@ -48,9 +48,9 @@ import { useServices } from "@/hooks/use-salon-data";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "לוח ניהול סטודיו — אליאל ביוטי" },
+      { title: "לוח ניהול סטודיו - אליאל ביוטי" },
       { name: "description", content: "ניהול תורים, סטטוסים ושעות פעילות הסטודיו." },
-      { property: "og:title", content: "לוח ניהול סטודיו — אליאל ביוטי" },
+      { property: "og:title", content: "לוח ניהול סטודיו - אליאל ביוטי" },
       { property: "og:description", content: "ניהול תורים ושעות פעילות הסטודיו." },
       { name: "robots", content: "noindex" },
     ],
@@ -226,7 +226,7 @@ function Dashboard() {
           <div className="flex min-w-0 items-center gap-2">
             <Sparkles className="size-5 shrink-0 text-primary" />
             <span className="truncate font-display text-xl font-medium tracking-wide">
-              אליאל ביוטי — ניהול סטודיו
+              אליאל ביוטי - ניהול סטודיו
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -492,13 +492,16 @@ type BlockedSlot = {
   id: string;
   block_date: string;
   block_time: string | null;
+  end_time: string | null;
   reason: string | null;
 };
 
 function AvailabilityPanel() {
   const queryClient = useQueryClient();
   const [blockDate, setBlockDate] = useState("");
-  const [blockTime, setBlockTime] = useState("");
+  const [isAllDay, setIsAllDay] = useState(false);
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("13:00");
   const [reason, setReason] = useState("");
 
   const hours = useQuery({
@@ -513,7 +516,11 @@ function AvailabilityPanel() {
   const blocks = useQuery({
     queryKey: ["blocked_slots"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("blocked_slots").select("*").order("block_date");
+      const { data, error } = await supabase
+        .from("blocked_slots")
+        .select("*")
+        .order("block_date", { ascending: true })
+        .order("block_time", { ascending: true, nullsFirst: true });
       if (error) throw error;
       return (data ?? []) as BlockedSlot[];
     },
@@ -536,21 +543,44 @@ function AvailabilityPanel() {
 
   const addBlock = useMutation({
     mutationFn: async () => {
+      if (!blockDate) {
+        toast.error("אנא בחרי תאריך לחסימה");
+        return;
+      }
+
+      if (!isAllDay) {
+        if (!startTime || !endTime) {
+          toast.error("אנא הזיני שעת התחלה ושעת סיום");
+          return;
+        }
+        if (startTime >= endTime) {
+          toast.error("שעת הסיום חייבת להיות אחרי שעת ההתחלה");
+          return;
+        }
+      }
+
       const { error } = await supabase.from("blocked_slots").insert({
         block_date: blockDate,
-        block_time: blockTime || null,
+        block_time: isAllDay ? null : startTime,
+        end_time: isAllDay ? null : endTime,
         reason: reason.trim() || null,
       });
-      if (error) throw error;
+      if (error) {
+        if (error.code === "23505") {
+          throw new Error("חסימה זו כבר קיימת עבור תאריך ושעות אלו");
+        }
+        throw error;
+      }
     },
     onSuccess: () => {
-      toast.success("המועד נחסם בהצלחה");
+      toast.success(isAllDay ? "היום נחסם בהצלחה" : "טווח השעות נחסם בהצלחה");
       setBlockDate("");
-      setBlockTime("");
       setReason("");
       void queryClient.invalidateQueries({ queryKey: ["blocked_slots"] });
     },
-    onError: () => toast.error("לא ניתן היה לחסום את המועד"),
+    onError: (err: any) => {
+      toast.error(err.message || "לא ניתן היה לחסום את המועד");
+    },
   });
 
   const removeBlock = useMutation({
@@ -570,7 +600,7 @@ function AvailabilityPanel() {
       <section className="shadow-card rounded-3xl border border-border bg-card p-6">
         <h2 className="text-2xl font-medium">שעות פעילות</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          שעות פעילות שבועיות לקביעת חלונות תורים פנויים.
+          שעות פעילות שבועיות לקביעת חלונות תורים פנויים
         </p>
         <div className="mt-5 space-y-3">
           {(hours.data ?? []).map((row) => (
@@ -612,76 +642,152 @@ function AvailabilityPanel() {
       <section className="shadow-card rounded-3xl border border-border bg-card p-6">
         <h2 className="text-2xl font-medium">תאריכים ושעות חסומים</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          השאירי שעה ריקה כדי לחסום יום שלם.
+          חסימת יום שלם או טווח שעות מסוים בתוך תאריך (למשל להפסקות או חופשות).
         </p>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+
+        <div className="mt-5 space-y-4">
           <div>
             <Label htmlFor="block_date">תאריך</Label>
             <Input
               id="block_date"
               type="date"
-              className="mt-2"
+              className="mt-1.5"
               value={blockDate}
               onChange={(e) => setBlockDate(e.target.value)}
             />
           </div>
-          <div>
-            <Label htmlFor="block_time">שעה (אופציונלי)</Label>
-            <Input
-              id="block_time"
-              type="time"
-              className="mt-2 text-center"
-              value={blockTime}
-              onChange={(e) => setBlockTime(e.target.value)}
+
+          <div className="flex items-center justify-between rounded-2xl border border-border/70 bg-muted/20 p-3.5">
+            <div className="space-y-0.5">
+              <Label htmlFor="all_day_toggle" className="cursor-pointer text-sm font-medium">
+                חסימת יום שלם
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {isAllDay ? "כל שעות היום ייחסמו לקביעת תורים" : "חסימת טווח שעות מוגדר בתוך היום"}
+              </p>
+            </div>
+            <Switch
+              id="all_day_toggle"
+              checked={isAllDay}
+              onCheckedChange={setIsAllDay}
             />
           </div>
-          <div className="sm:col-span-2">
+
+          {!isAllDay && (
+            <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="start_time">משעה</Label>
+                  <Input
+                    id="start_time"
+                    type="time"
+                    className="mt-1.5 text-center font-mono"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="end_time">עד שעה</Label>
+                  <Input
+                    id="end_time"
+                    type="time"
+                    className="mt-1.5 text-center font-mono"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                  />
+                </div>
+              </div>
+              {startTime && endTime && startTime >= endTime && (
+                <p className="text-xs font-medium text-destructive">
+                  שעת הסיום חייבת להיות אחרי שעת ההתחלה.
+                </p>
+              )}
+            </div>
+          )}
+
+          <div>
             <Label htmlFor="reason">סיבה לחסימה (אופציונלי)</Label>
             <Input
               id="reason"
-              className="mt-2 text-right"
+              className="mt-1.5 text-right"
               maxLength={120}
-              placeholder="חופשה, סידורים אישיים וכו'"
+              placeholder="חופשה, סידורים אישיים, הפסקה וכו'"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
             />
           </div>
-        </div>
-        <Button
-          className="mt-4 w-full rounded-full font-medium"
-          disabled={!blockDate || addBlock.isPending}
-          onClick={() => addBlock.mutate()}
-        >
-          <Plus className="size-4 ml-1" /> חסימת מועד
-        </Button>
 
-        <ul className="mt-5 space-y-2">
-          {(blocks.data ?? []).map((block) => (
-            <li
-              key={block.id}
-              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-border/70 p-3"
-            >
-              <div className="min-w-0">
-                <p className="flex items-center gap-2 truncate text-sm font-medium">
-                  <CalendarClock className="size-4 shrink-0 text-primary ml-1" />
-                  {format(new Date(`${block.block_date}T00:00:00`), "d בMMMM yyyy", { locale: he })}
-                  {block.block_time ? ` · ${normalizeTime(block.block_time)}` : " · יום שלם"}
-                </p>
-                {block.reason && (
-                  <p className="mt-1 truncate text-xs text-muted-foreground">{block.reason}</p>
-                )}
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="הסרת חסימה"
-                onClick={() => removeBlock.mutate(block.id)}
-              >
-                <Trash2 className="size-4 text-destructive" />
-              </Button>
-            </li>
-          ))}
-        </ul>
+          <Button
+            className="w-full rounded-full font-medium"
+            disabled={
+              !blockDate ||
+              (!isAllDay && (!startTime || !endTime || startTime >= endTime)) ||
+              addBlock.isPending
+            }
+            onClick={() => addBlock.mutate()}
+          >
+            <Plus className="size-4 ml-1" />
+            {isAllDay ? "חסימת יום שלם" : `חסימת טווח שעות (${startTime} – ${endTime})`}
+          </Button>
+        </div>
+
+        <div className="mt-6 border-t border-border/60 pt-4">
+          <h3 className="mb-3 text-sm font-medium text-muted-foreground">רשימת חסימות קיימות</h3>
+          <ul className="space-y-2">
+            {(blocks.data ?? []).length === 0 ? (
+              <li className="rounded-2xl border border-dashed border-border/70 p-6 text-center text-sm text-muted-foreground">
+                אין תאריכים או שעות חסומים כרגע
+              </li>
+            ) : (
+              (blocks.data ?? []).map((block) => {
+                const isWholeDay = !block.block_time;
+                return (
+                  <li
+                    key={block.id}
+                    className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-border/70 p-3.5 transition-colors hover:bg-muted/30"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="flex items-center gap-1.5 text-sm font-medium">
+                          <CalendarClock className="size-4 shrink-0 text-primary" />
+                          {format(new Date(`${block.block_date}T00:00:00`), "EEEE, d בMMMM yyyy", {
+                            locale: he,
+                          })}
+                        </span>
+                        {isWholeDay ? (
+                          <Badge variant="secondary" className="rounded-full text-xs font-normal">
+                            יום שלם
+                          </Badge>
+                        ) : (
+                          <Badge
+                            variant="outline"
+                            className="rounded-full border-primary/30 bg-primary/5 text-xs font-mono font-normal text-primary"
+                            dir="ltr"
+                          >
+                            {normalizeTime(block.block_time!)}{" "}
+                            {block.end_time ? `– ${normalizeTime(block.end_time)}` : ""}
+                          </Badge>
+                        )}
+                      </div>
+                      {block.reason && (
+                        <p className="mt-1 truncate text-xs text-muted-foreground">{block.reason}</p>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="הסרת חסימה"
+                      className="hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => removeBlock.mutate(block.id)}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </li>
+                );
+              })
+            )}
+          </ul>
+        </div>
       </section>
     </div>
   );
