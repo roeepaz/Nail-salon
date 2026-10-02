@@ -1,0 +1,9 @@
+{
+    "main":  "src/index.ts",
+    "types":  "src/index.ts",
+    "name":  "@nail-salon/api",
+    "version":  "1.0.0",
+    "dependencies":  {
+                         "@supabase/supabase-js":  "^2.117.2"
+                     }
+}

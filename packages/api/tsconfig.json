@@ -1,0 +1,10 @@
+{
+    "compilerOptions":  {
+                            "skipLibCheck":  true,
+                            "strict":  true,
+                            "moduleResolution":  "bundler",
+                            "esModuleInterop":  true,
+                            "module":  "esnext",
+                            "target":  "es2022"
+                        }
+}
