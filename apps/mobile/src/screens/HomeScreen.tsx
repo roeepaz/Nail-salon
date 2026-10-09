@@ -5,334 +5,385 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  ActivityIndicator,
   Image,
   Dimensions,
+  SafeAreaView,
+  Platform,
+  ActivityIndicator,
+  Alert
 } from 'react-native';
+import { Sparkles, Leaf, ShieldCheck, CalendarPlus } from 'lucide-react-native';
 import { supabase } from '../lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 import type { Database } from '@nail-salon/api';
 
-type Appointment = Database['public']['Tables']['appointments']['Row'];
-type Service = Database['public']['Tables']['services']['Row'];
 type GalleryImage = Database['public']['Tables']['gallery_images']['Row'];
 
 type Props = {
   session: Session;
   onBookPress: () => void;
+  onAppointmentsPress: () => void;
 };
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
-export default function HomeScreen({ session, onBookPress }: Props) {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [services, setServices] = useState<Service[]>([]);
+export default function HomeScreen({ session, onBookPress, onAppointmentsPress }: Props) {
   const [gallery, setGallery] = useState<GalleryImage[]>([]);
+  const [upcomingCount, setUpcomingCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        // Fetch user's appointments
-        const { data: appts } = await supabase
-          .from('appointments')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .order('appointment_date', { ascending: true })
-          .limit(3);
-
-        // Fetch active services
-        const { data: servs } = await supabase
-          .from('services')
-          .select('*')
-          .eq('is_active', true)
-          .order('sort_order', { ascending: true });
-
-        // Fetch gallery images
         const { data: imgs } = await supabase
           .from('gallery_images')
           .select('*')
           .order('sort_order', { ascending: true });
-
-        if (appts) setAppointments(appts);
-        if (servs) setServices(servs);
         if (imgs) setGallery(imgs);
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        const { data: appts } = await supabase
+          .from('appointments')
+          .select('id')
+          .eq('user_id', session.user.id)
+          .gte('appointment_date', todayStr);
+        if (appts) setUpcomingCount(appts.length);
       } catch (error) {
         console.error(error);
       } finally {
         setLoading(false);
       }
     }
-
     fetchData();
   }, [session.user.id]);
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#D4B5B0" />
+        <ActivityIndicator size="large" color="#B76E79" />
       </View>
     );
   }
 
+  const mainImage = gallery.length > 0 ? gallery[0].url : 'https://via.placeholder.com/400x500';
+
+  const handleLogoutPress = () => {
+    Alert.alert(
+      'התנתקות',
+      'האם את בטוחה שברצונך להתנתק מהמשתמש?',
+      [
+        { text: 'לא', style: 'cancel' },
+        { text: 'כן, התנתקי', onPress: () => supabase.auth.signOut(), style: 'destructive' }
+      ]
+    );
+  };
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Header Area */}
+        
+        {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.greeting}>אליאל ביוטי</Text>
-          <Text style={styles.subtitle}>שלום, {session.user.user_metadata?.full_name || session.user.email?.split('@')[0]}</Text>
+          <TouchableOpacity style={styles.headerBookButton} onPress={onBookPress}>
+            <Text style={styles.headerBookButtonText}>קביעת תור</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.userPill} onPress={handleLogoutPress} activeOpacity={0.7}>
+            <Text style={styles.userPillText}>{session.user.user_metadata?.full_name?.split(' ')[0] || 'לקוחה'}</Text>
+            <View style={styles.userAvatar}>
+              <Text style={styles.userAvatarText}>{(session.user.user_metadata?.full_name?.[0] || 'ל').toUpperCase()}</Text>
+            </View>
+          </TouchableOpacity>
+          <View style={{flex: 1}} />
+          <Text style={styles.logoText}>אליאל ביוטי</Text>
+          <View style={styles.logoCircle}>
+            <Text style={styles.logoCircleText}>EB</Text>
+          </View>
         </View>
 
-        {/* Hero Booking Card */}
-        <View style={styles.heroCard}>
-          <Text style={styles.heroTitle}>מוכנה לפינוק שמגיע לך?</Text>
-          <Text style={styles.heroSubtitle}>קבעי תור אונליין תוך דקה</Text>
+        {/* Hero Section */}
+        <View style={styles.heroSection}>
+          <Text style={styles.eyebrow}>סטודיו בוטיק לציפורניים</Text>
+          <Text style={styles.title}>יופי מדויק,</Text>
+          <Text style={styles.titleHighlight}>מגע של יוקרה.</Text>
+          <Text style={styles.subtitle}>
+            הכנה יסודית, קווים נקיים ועמידות מושלמת לשבועות. כיסא אחד, לקוחה אחת בכל פעם, ביחס אישי ומפנק.
+          </Text>
+        </View>
+
+        {/* Action Buttons */}
+        <View style={styles.actionsRow}>
+          <TouchableOpacity style={styles.outlineButton}>
+            <Text style={styles.outlineButtonText}>לצפייה בטיפולים</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.primaryButton} onPress={onBookPress}>
-            <Text style={styles.primaryButtonText}>קביעת תור עכשיו</Text>
+            <Text style={styles.primaryButtonText}>קביעת תור ←</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Upcoming Appointments */}
-        {appointments.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>התורים הקרובים שלך</Text>
-            {appointments.map((appt) => (
-              <View key={appt.id} style={styles.appointmentCard}>
-                <View style={styles.apptHeader}>
-                  <Text style={styles.apptService}>{appt.service_type}</Text>
-                  <View style={[styles.statusBadge, appt.status === 'confirmed' ? styles.statusConfirmed : styles.statusPending]}>
-                    <Text style={styles.statusText}>
-                      {appt.status === 'confirmed' ? 'מאושר' : appt.status === 'pending' ? 'ממתין' : appt.status}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={styles.apptDate}>
-                  {appt.appointment_date} | שעה {appt.appointment_time}
-                </Text>
-              </View>
-            ))}
+        {/* Features list */}
+        <View style={styles.featuresRow}>
+          <View style={styles.featureItem}>
+            <Sparkles size={16} color="#B76E79" style={styles.featureIcon} />
+            <Text style={styles.featureText}>עמידות ל-3 שבועות</Text>
           </View>
-        )}
-
-        {/* Services Menu */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>תפריט טיפולים</Text>
-          {services.map((service) => (
-            <View key={service.id} style={styles.serviceCard}>
-              <View style={styles.serviceHeader}>
-                <Text style={styles.serviceName}>{service.name}</Text>
-                <Text style={styles.servicePrice}>{service.price}</Text>
-              </View>
-              <Text style={styles.serviceDuration}>{service.duration}</Text>
-              <Text style={styles.serviceDesc}>{service.description}</Text>
-            </View>
-          ))}
+          <View style={styles.featureItem}>
+            <Leaf size={16} color="#B76E79" style={styles.featureIcon} />
+            <Text style={styles.featureText}>מניקור מכשירי עדין</Text>
+          </View>
+        </View>
+        <View style={[styles.featuresRow, { justifyContent: 'center', marginTop: 8 }]}>
+          <View style={styles.featureItem}>
+            <ShieldCheck size={16} color="#B76E79" style={styles.featureIcon} />
+            <Text style={styles.featureText}>כלים סטריליים ומחוטאים</Text>
+          </View>
         </View>
 
-        {/* Gallery */}
-        {gallery.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>הצצה לסטודיו</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.galleryScrollContent}>
-              {gallery.map((img) => (
-                <Image
-                  key={img.id}
-                  source={{ uri: img.url }}
-                  style={styles.galleryImage}
-                  resizeMode="cover"
-                />
-              ))}
-            </ScrollView>
-          </View>
-        )}
-        
+        {/* Big Image Section */}
+        <View style={styles.imageWrapper}>
+          <Image source={{ uri: mainImage }} style={styles.mainImage} resizeMode="cover" />
+        </View>
+
         <View style={styles.footerSpacer} />
       </ScrollView>
-    </View>
+
+      <TouchableOpacity style={styles.floatingBookBtn} onPress={onAppointmentsPress} activeOpacity={0.8}>
+        <CalendarPlus color="#fff" size={20} />
+        <Text style={styles.floatingBookBtnText}>התורים שלי</Text>
+        {upcomingCount > 0 && (
+          <View style={styles.notificationBadge}>
+            <Text style={styles.notificationBadgeText}>{upcomingCount}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFF2F2', // Soft blush gradient feel
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFF2F2',
   },
   scrollContent: {
-    paddingTop: 60,
+    paddingTop: 20,
     paddingBottom: 40,
+    flexGrow: 1,
   },
   header: {
-    paddingHorizontal: 24,
-    marginBottom: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 40,
   },
-  greeting: {
-    fontSize: 32,
+  headerBookButton: {
+    backgroundColor: '#B76E79', // Rose color
+    paddingVertical: 12, // Increased for 44px min touch target
+    paddingHorizontal: 20,
+    borderRadius: 24,
+    minHeight: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerBookButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 15,
+  },
+  userPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 22,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginLeft: 12,
+    borderWidth: 1,
+    borderColor: '#EAEAEA',
+    minHeight: 44, // 44px min touch target equivalent if tappable
+  },
+  userPillText: {
+    fontSize: 14,
+    color: '#333',
+    marginRight: 6,
+    fontWeight: '500',
+  },
+  userAvatar: {
+    backgroundColor: '#FFE5E5',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  userAvatarText: {
+    fontSize: 12,
+    color: '#B76E79',
+    fontWeight: 'bold',
+  },
+  logoText: {
+    fontSize: 20,
+    color: '#B76E79',
+    fontWeight: '300',
+    marginRight: 10,
+  },
+  logoCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F5E6E8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoCircleText: {
+    color: '#B76E79',
+    fontSize: 12,
+  },
+  heroSection: {
+    paddingHorizontal: 24,
+    alignItems: 'flex-end',
+    marginBottom: 30,
+  },
+  eyebrow: {
+    fontSize: 14,
+    color: '#888',
+    letterSpacing: 2,
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 42,
     fontWeight: '300',
     color: '#333',
     textAlign: 'right',
   },
-  subtitle: {
-    fontSize: 18,
-    color: '#666',
+  titleHighlight: {
+    fontSize: 42,
+    fontWeight: '300',
+    color: '#B76E79',
+    fontStyle: 'italic',
     textAlign: 'right',
-    marginTop: 4,
+    marginBottom: 16,
   },
-  heroCard: {
-    marginHorizontal: 20,
-    backgroundColor: '#fff',
-    borderRadius: 24,
-    padding: 32,
-    alignItems: 'center',
-    shadowColor: '#D4B5B0',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 8,
-    marginBottom: 32,
-    borderWidth: 1,
-    borderColor: 'rgba(212, 181, 176, 0.3)',
-  },
-  heroTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  heroSubtitle: {
+  subtitle: {
     fontSize: 16,
     color: '#666',
-    textAlign: 'center',
-    marginBottom: 24,
+    textAlign: 'right',
+    lineHeight: 24,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    marginBottom: 40,
+    gap: 12,
   },
   primaryButton: {
-    backgroundColor: '#D4B5B0',
-    paddingHorizontal: 32,
-    paddingVertical: 16,
+    backgroundColor: '#B76E79',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
     borderRadius: 30,
-    width: '100%',
+    flex: 1,
     alignItems: 'center',
   },
   primaryButtonText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
-    letterSpacing: 0.5,
   },
-  section: {
-    marginBottom: 32,
+  outlineButton: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#EAEAEA',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 30,
+    flex: 1,
+    alignItems: 'center',
+  },
+  outlineButtonText: {
+    color: '#333',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  featuresRow: {
+    flexDirection: 'row-reverse',
+    justifyContent: 'center',
+    gap: 16,
     paddingHorizontal: 20,
   },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: '600',
-    color: '#333',
-    textAlign: 'right',
-    marginBottom: 16,
-  },
-  appointmentCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
-  },
-  apptHeader: {
+  featureItem: {
     flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
-  },
-  apptService: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-  },
-  statusBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  statusConfirmed: {
-    backgroundColor: '#E8F5E9',
-  },
-  statusPending: {
-    backgroundColor: '#FFF8E1',
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#333',
-  },
-  apptDate: {
-    fontSize: 15,
-    color: '#555',
-    textAlign: 'right',
-  },
-  serviceCard: {
-    backgroundColor: '#fff',
+    paddingVertical: 8,
     borderRadius: 16,
-    padding: 20,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
   },
-  serviceHeader: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
+  featureIcon: {
+    marginLeft: 6,
   },
-  serviceName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-  },
-  servicePrice: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#D4B5B0',
-  },
-  serviceDuration: {
+  featureText: {
     fontSize: 14,
-    color: '#888',
-    textAlign: 'right',
-    marginBottom: 12,
+    color: '#555',
+    fontWeight: '500',
   },
-  serviceDesc: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'right',
-    lineHeight: 20,
-  },
-  galleryScrollContent: {
-    paddingBottom: 16,
-    flexDirection: 'row-reverse',
-  },
-  galleryImage: {
-    width: width * 0.7,
-    height: width * 0.7,
+  imageWrapper: {
+    marginTop: 24,
+    marginHorizontal: 16,
     borderRadius: 24,
-    marginRight: 16,
-    backgroundColor: '#EEE',
+    overflow: 'hidden',
+    flex: 1,
+    minHeight: 160,
+    position: 'relative',
+  },
+  mainImage: {
+    width: '100%',
+    height: '100%',
+  },
+  floatingBookBtn: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 30,
+    backgroundColor: '#B76E79',
+    shadowColor: '#B76E79',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    elevation: 8,
+    gap: 8,
+  },
+  floatingBookBtnText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#333',
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF',
+  },
+  notificationBadgeText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: 'bold',
   },
   footerSpacer: {
     height: 40,

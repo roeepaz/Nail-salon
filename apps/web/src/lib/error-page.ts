@@ -19,7 +19,7 @@ export function renderErrorPage(): string {
   <body>
     <div class="card">
       <h1>הדף לא נטען כראוי</h1>
-      <p>אירעה שגיאה בלתי צפויה. ניתן לנסות לרענן את העמוד או לחזור לדף הבית.</p>
+      <p>אירעה שגיאה בלתי צפויה. ניתן לנסות לרענן את העמוד או לחזרי לדף הבית.</p>
       <div class="actions">
         <button class="primary" onclick="location.reload()">נסה שוב</button>
         <a class="secondary" href="/">חזרה לדף הבית</a>

@@ -5,11 +5,12 @@ import { Session } from '@supabase/supabase-js';
 import LoginScreen from './src/screens/LoginScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import BookingScreen from './src/screens/BookingScreen';
+import HomeScreen from './src/screens/HomeScreen';
 import { StatusBar } from 'expo-status-bar';
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
-  const [currentScreen, setCurrentScreen] = useState<'dashboard' | 'booking'>('dashboard');
+  const [currentScreen, setCurrentScreen] = useState<'home' | 'dashboard' | 'booking'>('home');
 
   useEffect(() => {
     // Get initial session
@@ -20,7 +21,7 @@ export default function App() {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      setCurrentScreen('dashboard'); // reset to dashboard on login/logout
+      setCurrentScreen('home'); // reset to home on login/logout
     });
 
     return () => subscription.unsubscribe();
@@ -30,15 +31,22 @@ export default function App() {
     <View style={styles.container}>
       <StatusBar style="dark" />
       {session && session.user ? (
-        currentScreen === 'dashboard' ? (
+        currentScreen === 'home' ? (
+          <HomeScreen
+            session={session}
+            onBookPress={() => setCurrentScreen('booking')}
+            onAppointmentsPress={() => setCurrentScreen('dashboard')}
+          />
+        ) : currentScreen === 'dashboard' ? (
           <DashboardScreen 
             session={session} 
-            onBookPress={() => setCurrentScreen('booking')} 
+            onBookPress={() => setCurrentScreen('booking')}
+            onBack={() => setCurrentScreen('home')}
           />
         ) : (
           <BookingScreen 
             session={session}
-            onBack={() => setCurrentScreen('dashboard')} 
+            onBack={() => setCurrentScreen('home')} 
             onBookingSuccess={() => setCurrentScreen('dashboard')}
           />
         )
