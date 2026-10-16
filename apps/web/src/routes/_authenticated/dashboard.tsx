@@ -2,7 +2,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
-import { CalendarClock, LogOut, Plus, Sparkles, Trash2, Bell, Check, Settings2 } from "lucide-react";
+import {
+  CalendarClock,
+  LogOut,
+  Plus,
+  Sparkles,
+  Trash2,
+  Bell,
+  Check,
+  Settings2,
+  Loader2,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
@@ -44,8 +54,8 @@ import { dispatchAppointmentNotification } from "@/lib/notifications/dispatcher"
 import { DAY_NAMES, normalizeTime, toDateKey } from "@/lib/salon";
 import { useServices, getServiceName as resolveServiceName } from "@/hooks/use-salon-data";
 
-
 export const Route = createFileRoute("/_authenticated/dashboard")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "לוח ניהול סטודיו - אליאל ביוטי" },
@@ -71,7 +81,8 @@ type Appointment = {
 
 const STATUS_STYLE: Record<string, string> = {
   pending: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30",
-  confirmed: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30",
+  confirmed:
+    "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30",
   canceled: "bg-destructive/10 text-destructive border border-destructive/20",
 };
 
@@ -217,6 +228,17 @@ function Dashboard() {
     return resolveServiceName(serviceType, dbServices);
   }
 
+  if (isAuthLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="size-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background text-right" dir="rtl">
@@ -237,7 +259,12 @@ function Dashboard() {
             >
               <Settings2 className="size-4" /> עריכה
             </Button>
-            <Button variant="ghost" size="sm" className="shrink-0 rounded-full gap-1.5" onClick={signOut}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="shrink-0 rounded-full gap-1.5"
+              onClick={signOut}
+            >
               <LogOut className="size-4" /> התנתקות
             </Button>
           </div>
@@ -373,8 +400,8 @@ function Dashboard() {
             <AlertDialogTitle>למחוק את התור לצמיתות?</AlertDialogTitle>
             <AlertDialogDescription>
               {pendingDelete?.client_name} ·{" "}
-              {pendingDelete ? normalizeTime(pendingDelete.appointment_time) : ""}. פעולה זו תמחק
-              את התור מהמערכת ולא ניתן לשחזר אותה.
+              {pendingDelete ? normalizeTime(pendingDelete.appointment_time) : ""}. פעולה זו תמחק את
+              התור מהמערכת ולא ניתן לשחזר אותה.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row-reverse justify-start gap-2">
@@ -433,7 +460,9 @@ function ScheduleList({
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="truncate font-medium">{item.client_name}</p>
-                    <Badge className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${STATUS_STYLE[item.status] ?? ""}`}>
+                    <Badge
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${STATUS_STYLE[item.status] ?? ""}`}
+                    >
                       {STATUS_LABELS[item.status] || item.status}
                     </Badge>
                   </div>
@@ -444,7 +473,9 @@ function ScheduleList({
                     · {normalizeTime(item.appointment_time)} · {getServiceName(item.service_type)}
                   </p>
                   {item.notes && (
-                    <p className="mt-1 truncate text-xs text-muted-foreground italic">"{item.notes}"</p>
+                    <p className="mt-1 truncate text-xs text-muted-foreground italic">
+                      "{item.notes}"
+                    </p>
                   )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -666,11 +697,7 @@ function AvailabilityPanel() {
                 {isAllDay ? "כל שעות היום ייחסמו לקביעת תורים" : "חסימת טווח שעות מוגדר בתוך היום"}
               </p>
             </div>
-            <Switch
-              id="all_day_toggle"
-              checked={isAllDay}
-              onCheckedChange={setIsAllDay}
-            />
+            <Switch id="all_day_toggle" checked={isAllDay} onCheckedChange={setIsAllDay} />
           </div>
 
           {!isAllDay && (
@@ -770,7 +797,9 @@ function AvailabilityPanel() {
                         )}
                       </div>
                       {block.reason && (
-                        <p className="mt-1 truncate text-xs text-muted-foreground">{block.reason}</p>
+                        <p className="mt-1 truncate text-xs text-muted-foreground">
+                          {block.reason}
+                        </p>
                       )}
                     </div>
                     <Button

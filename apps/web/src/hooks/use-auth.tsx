@@ -15,7 +15,7 @@ type AuthContextType = {
   profile: UserProfile | null;
   isAdmin: boolean;
   isLoading: boolean;
-  refreshProfile: () => Promise<void>;
+  refreshProfile: (targetUser?: User) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -46,8 +46,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    setUser(currentUser);
-
     try {
       // 1. Fetch Profile
       const { data: profileData } = await supabase
@@ -56,24 +54,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq("id", currentUser.id)
         .maybeSingle();
 
+      let resolvedProfile: UserProfile;
       if (profileData) {
-        setProfile(profileData);
+        resolvedProfile = profileData;
       } else {
         // Fallback to user metadata if profile record doesn't exist yet
         const meta = currentUser.user_metadata || {};
-        const fallbackProfile: UserProfile = {
+        resolvedProfile = {
           id: currentUser.id,
           full_name: typeof meta["full_name"] === "string" ? meta["full_name"] : "",
           phone: typeof meta["phone"] === "string" ? meta["phone"] : "",
           email: currentUser.email || "",
         };
-        setProfile(fallbackProfile);
 
         // Attempt to create the missing profile row
         if (currentUser.email) {
           void supabase
             .from("profiles")
-            .upsert(fallbackProfile)
+            .upsert(resolvedProfile)
             .then(() => {});
         }
       }
@@ -86,9 +84,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq("role", "admin")
         .maybeSingle();
 
+      setProfile(resolvedProfile);
       setIsAdmin(Boolean(roleData));
+      setUser(currentUser);
     } catch (err) {
       console.error("Error loading user profile or role:", err);
+      setUser(currentUser);
     } finally {
       setIsLoading(false);
     }
@@ -114,9 +115,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const refreshProfile = async () => {
-    if (user) {
-      await loadUserData(user);
+  const refreshProfile = async (targetUser?: User) => {
+    const u = targetUser || user || (await supabase.auth.getUser()).data.user;
+    if (u) {
+      await loadUserData(u);
     }
   };
 

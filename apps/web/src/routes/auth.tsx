@@ -39,7 +39,7 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
-  const { user, isAdmin, refreshProfile } = useAuth();
+  const { user, isAdmin, isLoading, refreshProfile } = useAuth();
 
   const [mode, setMode] = useState<"signin" | "signup">(search.mode || "signin");
   const [fullName, setFullName] = useState("");
@@ -48,13 +48,13 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const redirectTo = search.redirect || (isAdmin ? "/dashboard" : "/book");
-
+  // If already authenticated and not submitting form, redirect appropriately
   useEffect(() => {
-    if (user) {
-      void navigate({ to: redirectTo, replace: true });
+    if (!loading && !isLoading && user) {
+      const dest = search.redirect || (isAdmin ? "/dashboard" : "/book");
+      void navigate({ to: dest, replace: true });
     }
-  }, [user, redirectTo, navigate]);
+  }, [user, isAdmin, isLoading, loading, search.redirect, navigate]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -75,6 +75,7 @@ function AuthPage() {
           return;
         }
 
+        const fallbackRedirect = search.redirect || "/book";
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
@@ -83,7 +84,7 @@ function AuthPage() {
               full_name: fullName.trim(),
               phone: cleanPhone,
             },
-            emailRedirectTo: `${window.location.origin}${redirectTo}`,
+            emailRedirectTo: `${window.location.origin}${fallbackRedirect}`,
           },
         });
 
@@ -98,13 +99,11 @@ function AuthPage() {
             email: email.trim(),
           });
 
-          await refreshProfile();
+          await refreshProfile(data.user);
           toast.success("ברוכה הבאה! החשבון נוצר בהצלחה.");
-          await navigate({ to: redirectTo, replace: true });
+          await navigate({ to: fallbackRedirect, replace: true });
         } else {
-          toast.success(
-            "החשבון נוצר! אנא בדקי את תיבת המייל שלך לאימות החשבון ולאחר מכן התחברי.",
-          );
+          toast.success("החשבון נוצר! אנא בדקי את תיבת המייל שלך לאימות החשבון ולאחר מכן התחברי.");
           setMode("signin");
         }
       } else {
@@ -114,8 +113,6 @@ function AuthPage() {
         });
 
         if (error) throw error;
-
-        await refreshProfile();
 
         // Check if user is admin
         let dest = search.redirect;
@@ -130,6 +127,7 @@ function AuthPage() {
           dest = roleData ? "/dashboard" : "/book";
         }
 
+        await refreshProfile(data.user);
         toast.success("התחברת בהצלחה!");
         await navigate({ to: dest, replace: true });
       }
@@ -157,7 +155,10 @@ function AuthPage() {
           <div className="w-12" /> {/* balance spacing */}
         </div>
 
-        <div className="shadow-soft mt-8 rounded-3xl border border-border/70 bg-card p-8 sm:p-9 text-right" dir="rtl">
+        <div
+          className="shadow-soft mt-8 rounded-3xl border border-border/70 bg-card p-8 sm:p-9 text-right"
+          dir="rtl"
+        >
           <div className="flex rounded-full bg-secondary/70 p-1 mb-6">
             <button
               type="button"
@@ -183,7 +184,9 @@ function AuthPage() {
             </button>
           </div>
 
-          <h1 className="text-3xl font-medium">{mode === "signin" ? "ברוכה השבה" : "יצירת חשבון חדש"}</h1>
+          <h1 className="text-3xl font-medium">
+            {mode === "signin" ? "ברוכה השבה" : "יצירת חשבון חדש"}
+          </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {mode === "signin"
               ? "התחברי כדי לנהל את התורים שלך ולקבוע תור במהירות."
@@ -274,7 +277,11 @@ function AuthPage() {
               )}
             </div>
 
-            <Button type="submit" className="w-full rounded-full py-6 mt-2 font-medium" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full rounded-full py-6 mt-2 font-medium"
+              disabled={loading}
+            >
               {loading && <Loader2 className="size-4 animate-spin ml-2" />}
               {mode === "signin" ? "התחברי" : "צרי חשבון והמשיכי"}
             </Button>
@@ -286,9 +293,7 @@ function AuthPage() {
               className="text-sm text-muted-foreground hover:text-primary transition-colors"
               onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
             >
-              {mode === "signin"
-                ? "עדיין אין לך חשבון? הירשמי כאן"
-                : "כבר יש לך חשבון? התחברי כאן"}
+              {mode === "signin" ? "עדיין אין לך חשבון? הירשמי כאן" : "כבר יש לך חשבון? התחברי כאן"}
             </button>
           </div>
         </div>
