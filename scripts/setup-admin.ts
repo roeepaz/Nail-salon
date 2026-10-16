@@ -60,20 +60,25 @@ async function setupAdmin() {
     console.log("User created successfully.");
   }
 
-  // 2. Clear old admins and assign the new admin role
+  // 2. Assign the admin role without wiping existing admins
   console.log("Assigning admin role in database...");
 
-  // First, remove the admin role from any existing users
-  await supabase.from("user_roles").delete().eq("role", "admin");
-
-  // Then, assign it to the new user
-  const { error: roleError } = await supabase
+  const { data: existingRole } = await supabase
     .from("user_roles")
-    .insert({ user_id: userId, role: "admin" });
+    .select("id")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
 
-  if (roleError) {
-    console.error("Error assigning admin role:", roleError.message);
-    process.exit(1);
+  if (!existingRole) {
+    const { error: roleError } = await supabase
+      .from("user_roles")
+      .insert({ user_id: userId, role: "admin" });
+
+    if (roleError) {
+      console.error("Error assigning admin role:", roleError.message);
+      process.exit(1);
+    }
   }
 
   // Ensure profile exists with current email

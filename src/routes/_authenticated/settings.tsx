@@ -43,6 +43,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/settings")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "עריכה - ניהול סטודיו אליאל ביוטי" },
@@ -88,7 +89,15 @@ function SettingsPage() {
     void navigate({ to: "/auth", replace: true });
   }
 
-  if (isAuthLoading) return null;
+  if (isAuthLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="size-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-background text-right" dir="rtl">
@@ -101,11 +110,20 @@ function SettingsPage() {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="shrink-0 rounded-full gap-1.5"
-              onClick={() => void navigate({ to: "/dashboard" })}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 rounded-full gap-1.5"
+              onClick={() => void navigate({ to: "/dashboard" })}
+            >
               <Sparkles className="size-4" /> לוח ניהול
             </Button>
-            <Button variant="ghost" size="sm" className="shrink-0 rounded-full gap-1.5" onClick={signOut}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="shrink-0 rounded-full gap-1.5"
+              onClick={signOut}
+            >
               <LogOut className="size-4" /> התנתקות
             </Button>
           </div>
@@ -125,9 +143,15 @@ function SettingsPage() {
               <GalleryHorizontalEnd className="size-3.5" /> גלריה
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="info" className="mt-6"><SalonInfoPanel /></TabsContent>
-          <TabsContent value="services" className="mt-6"><ServicesPanel /></TabsContent>
-          <TabsContent value="gallery" className="mt-6"><GalleryPanel /></TabsContent>
+          <TabsContent value="info" className="mt-6">
+            <SalonInfoPanel />
+          </TabsContent>
+          <TabsContent value="services" className="mt-6">
+            <ServicesPanel />
+          </TabsContent>
+          <TabsContent value="gallery" className="mt-6">
+            <GalleryPanel />
+          </TabsContent>
         </Tabs>
       </main>
     </div>
@@ -135,11 +159,11 @@ function SettingsPage() {
 }
 
 const SETTING_KEYS = [
-  { key: "salon_name",    label: "שם הסטודיו",    type: "input" as const },
-  { key: "salon_tagline", label: "כותרת משנה",     type: "input" as const },
-  { key: "salon_address", label: "כתובת",          type: "input" as const },
-  { key: "salon_phone",   label: "טלפון",          type: "input" as const },
-  { key: "salon_about",   label: "אודות הסטודיו",  type: "textarea" as const },
+  { key: "salon_name", label: "שם הסטודיו", type: "input" as const },
+  { key: "salon_tagline", label: "כותרת משנה", type: "input" as const },
+  { key: "salon_address", label: "כתובת", type: "input" as const },
+  { key: "salon_phone", label: "טלפון", type: "input" as const },
+  { key: "salon_about", label: "אודות הסטודיו", type: "textarea" as const },
 ];
 
 function SalonInfoPanel() {
@@ -153,13 +177,18 @@ function SalonInfoPanel() {
       const { data, error } = await supabase.from("salon_settings").select("*");
       if (error) throw error;
       const map: SalonSettings = {};
-      (data ?? []).forEach((r) => { map[r.key] = r.value; });
+      (data ?? []).forEach((r) => {
+        map[r.key] = r.value;
+      });
       return map;
     },
   });
 
   useEffect(() => {
-    if (data) { setDraft(data); setDirty(false); }
+    if (data) {
+      setDraft(data);
+      setDirty(false);
+    }
   }, [data]);
 
   const save = useMutation({
@@ -179,10 +208,18 @@ function SalonInfoPanel() {
       setDirty(false);
       void queryClient.invalidateQueries({ queryKey: ["salon_settings"] });
     },
-    onError: (err) => { console.error("save settings error:", err); toast.error("שגיאה בשמירת הפרטים"); },
+    onError: (err) => {
+      console.error("save settings error:", err);
+      toast.error("שגיאה בשמירת הפרטים");
+    },
   });
 
-  if (isLoading) return <div className="flex justify-center py-16"><Loader2 className="size-6 animate-spin text-muted-foreground" /></div>;
+  if (isLoading)
+    return (
+      <div className="flex justify-center py-16">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    );
 
   return (
     <div className="shadow-card rounded-3xl border border-border bg-card p-6 md:p-8">
@@ -195,18 +232,34 @@ function SalonInfoPanel() {
           <div key={key}>
             <Label htmlFor={`setting_${key}`}>{label}</Label>
             {type === "textarea" ? (
-              <Textarea id={`setting_${key}`} className="mt-2 min-h-[90px] text-right"
+              <Textarea
+                id={`setting_${key}`}
+                className="mt-2 min-h-[90px] text-right"
                 value={draft[key] ?? ""}
-                onChange={(e) => { setDraft((p) => ({ ...p, [key]: e.target.value })); setDirty(true); }} />
+                onChange={(e) => {
+                  setDraft((p) => ({ ...p, [key]: e.target.value }));
+                  setDirty(true);
+                }}
+              />
             ) : (
-              <Input id={`setting_${key}`} className="mt-2 text-right"
+              <Input
+                id={`setting_${key}`}
+                className="mt-2 text-right"
                 value={draft[key] ?? ""}
-                onChange={(e) => { setDraft((p) => ({ ...p, [key]: e.target.value })); setDirty(true); }} />
+                onChange={(e) => {
+                  setDraft((p) => ({ ...p, [key]: e.target.value }));
+                  setDirty(true);
+                }}
+              />
             )}
           </div>
         ))}
       </div>
-      <Button className="mt-8 rounded-full px-6 gap-1.5" disabled={!dirty || save.isPending} onClick={() => save.mutate()}>
+      <Button
+        className="mt-8 rounded-full px-6 gap-1.5"
+        disabled={!dirty || save.isPending}
+        onClick={() => save.mutate()}
+      >
         {save.isPending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
         שמירת שינויים
       </Button>
@@ -226,7 +279,11 @@ function ServicesPanel() {
   const services = useQuery({
     queryKey: ["db_services"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("services").select("*").order("sort_order").order("created_at");
+      const { data, error } = await supabase
+        .from("services")
+        .select("*")
+        .order("sort_order")
+        .order("created_at");
       if (error) throw error;
       return (data ?? []) as DBService[];
     },
@@ -235,8 +292,10 @@ function ServicesPanel() {
   const saveService = useMutation({
     mutationFn: async (svc: Partial<DBService> & { id?: string }) => {
       if (svc.id) {
-        const { error } = await supabase.from("services")
-          .update({ ...svc, updated_at: new Date().toISOString() }).eq("id", svc.id);
+        const { error } = await supabase
+          .from("services")
+          .update({ ...svc, updated_at: new Date().toISOString() })
+          .eq("id", svc.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from("services").insert({
@@ -253,7 +312,9 @@ function ServicesPanel() {
     onSuccess: () => {
       toast.success("הטיפול נשמר ✨");
       void queryClient.invalidateQueries({ queryKey: ["db_services"] });
-      setEditing(null); setCreating(false); setForm(EMPTY_FORM);
+      setEditing(null);
+      setCreating(false);
+      setForm(EMPTY_FORM);
     },
     onError: (err) => {
       console.error("saveService error:", err);
@@ -289,7 +350,8 @@ function ServicesPanel() {
       const idx = list.findIndex((s) => s.id === id);
       const swapIdx = direction === "up" ? idx - 1 : idx + 1;
       if (swapIdx < 0 || swapIdx >= list.length) return;
-      const a = list[idx]!; const b = list[swapIdx]!;
+      const a = list[idx]!;
+      const b = list[swapIdx]!;
       await Promise.all([
         supabase.from("services").update({ sort_order: b.sort_order }).eq("id", a.id),
         supabase.from("services").update({ sort_order: a.sort_order }).eq("id", b.id),
@@ -300,7 +362,10 @@ function ServicesPanel() {
   });
 
   function handleSubmit() {
-    if (!form.name || !form.price || !form.duration) { toast.error("שם, מחיר ומשך הם שדות חובה"); return; }
+    if (!form.name || !form.price || !form.duration) {
+      toast.error("שם, מחיר ומשך הם שדות חובה");
+      return;
+    }
     if (editing) saveService.mutate({ ...form, id: editing.id });
     else saveService.mutate({ ...form });
   }
@@ -313,40 +378,85 @@ function ServicesPanel() {
         <div className="shadow-card rounded-3xl border border-primary/30 bg-card p-6">
           <div className="mb-5 flex items-center justify-between">
             <h2 className="text-xl font-medium">{editing ? "עריכת טיפול" : "הוספת טיפול חדש"}</h2>
-            <Button variant="ghost" size="icon" className="rounded-full"
-              onClick={() => { setEditing(null); setCreating(false); setForm(EMPTY_FORM); }}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={() => {
+                setEditing(null);
+                setCreating(false);
+                setForm(EMPTY_FORM);
+              }}
+            >
               <X className="size-4" />
             </Button>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="svc_name">שם הטיפול *</Label>
-              <Input id="svc_name" className="mt-2 text-right" placeholder="לק ג'ל"
-                value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} />
+              <Input
+                id="svc_name"
+                className="mt-2 text-right"
+                placeholder="לק ג'ל"
+                value={form.name}
+                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+              />
             </div>
             <div>
               <Label htmlFor="svc_price">מחיר *</Label>
-              <Input id="svc_price" className="mt-2 text-right" placeholder="₪140"
-                value={form.price} onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))} />
+              <Input
+                id="svc_price"
+                className="mt-2 text-right"
+                placeholder="₪140"
+                value={form.price}
+                onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))}
+              />
             </div>
             <div>
               <Label htmlFor="svc_duration">משך הטיפול *</Label>
-              <Input id="svc_duration" className="mt-2 text-right" placeholder="60 דק'"
-                value={form.duration} onChange={(e) => setForm((p) => ({ ...p, duration: e.target.value }))} />
+              <Input
+                id="svc_duration"
+                className="mt-2 text-right"
+                placeholder="60 דק'"
+                value={form.duration}
+                onChange={(e) => setForm((p) => ({ ...p, duration: e.target.value }))}
+              />
             </div>
             <div className="sm:col-span-2">
               <Label htmlFor="svc_desc">תיאור</Label>
-              <Textarea id="svc_desc" className="mt-2 min-h-[80px] text-right" placeholder="תיאור קצר..."
-                value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} />
+              <Textarea
+                id="svc_desc"
+                className="mt-2 min-h-[80px] text-right"
+                placeholder="תיאור קצר..."
+                value={form.description}
+                onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+              />
             </div>
           </div>
           <div className="mt-5 flex gap-2">
-            <Button className="rounded-full gap-1.5" disabled={saveService.isPending} onClick={handleSubmit}>
-              {saveService.isPending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+            <Button
+              className="rounded-full gap-1.5"
+              disabled={saveService.isPending}
+              onClick={handleSubmit}
+            >
+              {saveService.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Save className="size-4" />
+              )}
               {editing ? "שמירת שינויים" : "הוספת טיפול"}
             </Button>
-            <Button variant="outline" className="rounded-full"
-              onClick={() => { setEditing(null); setCreating(false); setForm(EMPTY_FORM); }}>ביטול</Button>
+            <Button
+              variant="outline"
+              className="rounded-full"
+              onClick={() => {
+                setEditing(null);
+                setCreating(false);
+                setForm(EMPTY_FORM);
+              }}
+            >
+              ביטול
+            </Button>
           </div>
         </div>
       )}
@@ -355,33 +465,57 @@ function ServicesPanel() {
         <div className="mb-5 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-medium">תפריט הטיפולים</h2>
-            <p className="mt-1 text-sm text-muted-foreground">ניהול כל הטיפולים המוצגים בעמוד הראשי ובטופס קביעת התור.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              ניהול כל הטיפולים המוצגים בעמוד הראשי ובטופס קביעת התור.
+            </p>
           </div>
           {!creating && !editing && (
-            <Button className="rounded-full gap-1.5"
-              onClick={() => { setCreating(true); setEditing(null); setForm(EMPTY_FORM); }}>
+            <Button
+              className="rounded-full gap-1.5"
+              onClick={() => {
+                setCreating(true);
+                setEditing(null);
+                setForm(EMPTY_FORM);
+              }}
+            >
               <Plus className="size-4" /> טיפול חדש
             </Button>
           )}
         </div>
         {services.isLoading ? (
-          <div className="flex justify-center py-10"><Loader2 className="size-6 animate-spin text-muted-foreground" /></div>
+          <div className="flex justify-center py-10">
+            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          </div>
         ) : list.length === 0 ? (
-          <p className="rounded-2xl bg-secondary p-4 text-sm text-muted-foreground text-center">אין טיפולים עדיין.</p>
+          <p className="rounded-2xl bg-secondary p-4 text-sm text-muted-foreground text-center">
+            אין טיפולים עדיין.
+          </p>
         ) : (
           <ul className="space-y-2">
             {list.map((s, idx) => (
-              <li key={s.id}
-                className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border p-4 transition-colors ${s.is_active ? "border-border bg-background" : "border-border/40 bg-secondary/40 opacity-60"}`}>
+              <li
+                key={s.id}
+                className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border p-4 transition-colors ${s.is_active ? "border-border bg-background" : "border-border/40 bg-secondary/40 opacity-60"}`}
+              >
                 <div className="flex flex-col gap-0.5">
-                  <Button variant="ghost" size="icon" className="h-6 w-6 rounded-lg"
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 rounded-lg"
                     disabled={idx === 0 || moveService.isPending}
-                    onClick={() => moveService.mutate({ id: s.id, direction: "up" })} aria-label="מעלה">
+                    onClick={() => moveService.mutate({ id: s.id, direction: "up" })}
+                    aria-label="מעלה"
+                  >
                     <ChevronUp className="size-3.5" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-6 w-6 rounded-lg"
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 rounded-lg"
                     disabled={idx === list.length - 1 || moveService.isPending}
-                    onClick={() => moveService.mutate({ id: s.id, direction: "down" })} aria-label="מטה">
+                    onClick={() => moveService.mutate({ id: s.id, direction: "down" })}
+                    aria-label="מטה"
+                  >
                     <ChevronDown className="size-3.5" />
                   </Button>
                 </div>
@@ -390,20 +524,49 @@ function ServicesPanel() {
                     <p className="font-medium">{s.name}</p>
                     <span className="text-primary font-semibold text-sm">{s.price}</span>
                     <span className="text-xs text-muted-foreground">{s.duration}</span>
-                    {!s.is_active && <Badge variant="secondary" className="text-xs">מוסתר</Badge>}
+                    {!s.is_active && (
+                      <Badge variant="secondary" className="text-xs">
+                        מוסתר
+                      </Badge>
+                    )}
                   </div>
-                  {s.description && <p className="mt-0.5 truncate text-xs text-muted-foreground">{s.description}</p>}
+                  {s.description && (
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">{s.description}</p>
+                  )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <Switch checked={s.is_active}
+                  <Switch
+                    checked={s.is_active}
                     onCheckedChange={(v) => toggleActive.mutate({ id: s.id, is_active: v })}
-                    aria-label={s.is_active ? "הסתרה" : "הצגה"} />
-                  <Button variant="ghost" size="icon" className="rounded-full"
-                    onClick={() => { setEditing(s); setCreating(false); setForm({ name: s.name, price: s.price, duration: s.duration, description: s.description }); }}
-                    aria-label="עריכה"><Edit2 className="size-4" /></Button>
-                  <Button variant="ghost" size="icon" className="rounded-full"
-                    onClick={() => setPendingDelete(s)} aria-label="מחיקה">
-                    <Trash2 className="size-4 text-destructive" /></Button>
+                    aria-label={s.is_active ? "הסתרה" : "הצגה"}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full"
+                    onClick={() => {
+                      setEditing(s);
+                      setCreating(false);
+                      setForm({
+                        name: s.name,
+                        price: s.price,
+                        duration: s.duration,
+                        description: s.description,
+                      });
+                    }}
+                    aria-label="עריכה"
+                  >
+                    <Edit2 className="size-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full"
+                    onClick={() => setPendingDelete(s)}
+                    aria-label="מחיקה"
+                  >
+                    <Trash2 className="size-4 text-destructive" />
+                  </Button>
                 </div>
               </li>
             ))}
@@ -415,12 +578,18 @@ function ServicesPanel() {
         <AlertDialogContent className="rounded-3xl text-right" dir="rtl">
           <AlertDialogHeader>
             <AlertDialogTitle>למחוק את הטיפול?</AlertDialogTitle>
-            <AlertDialogDescription>"{pendingDelete?.name}" יימחק לצמיתות מהתפריט.</AlertDialogDescription>
+            <AlertDialogDescription>
+              "{pendingDelete?.name}" יימחק לצמיתות מהתפריט.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row-reverse justify-start gap-2">
             <AlertDialogCancel className="rounded-full">ביטול</AlertDialogCancel>
-            <AlertDialogAction className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => pendingDelete && deleteService.mutate(pendingDelete.id)}>מחיקה</AlertDialogAction>
+            <AlertDialogAction
+              className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => pendingDelete && deleteService.mutate(pendingDelete.id)}
+            >
+              מחיקה
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -439,7 +608,11 @@ function GalleryPanel() {
   const images = useQuery({
     queryKey: ["gallery_images"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("gallery_images").select("*").order("sort_order").order("created_at");
+      const { data, error } = await supabase
+        .from("gallery_images")
+        .select("*")
+        .order("sort_order")
+        .order("created_at");
       if (error) throw error;
       return (data ?? []) as GalleryImage[];
     },
@@ -447,14 +620,16 @@ function GalleryPanel() {
 
   const addImage = useMutation({
     mutationFn: async (payload: { url: string; alt_text: string }) => {
-      const { error } = await supabase.from("gallery_images")
+      const { error } = await supabase
+        .from("gallery_images")
         .insert({ ...payload, sort_order: images.data?.length ?? 0 });
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("תמונה נוספה לגלריה ✨");
       void queryClient.invalidateQueries({ queryKey: ["gallery_images"] });
-      setUrlForm({ url: "", alt_text: "" }); setShowUrlForm(false);
+      setUrlForm({ url: "", alt_text: "" });
+      setShowUrlForm(false);
     },
     onError: (err: any) => {
       console.error("Add image error:", err);
@@ -481,7 +656,8 @@ function GalleryPanel() {
       const idx = list.findIndex((img) => img.id === id);
       const swapIdx = direction === "up" ? idx - 1 : idx + 1;
       if (swapIdx < 0 || swapIdx >= list.length) return;
-      const a = list[idx]!; const b = list[swapIdx]!;
+      const a = list[idx]!;
+      const b = list[swapIdx]!;
       await Promise.all([
         supabase.from("gallery_images").update({ sort_order: b.sort_order }).eq("id", a.id),
         supabase.from("gallery_images").update({ sort_order: a.sort_order }).eq("id", b.id),
@@ -500,14 +676,19 @@ function GalleryPanel() {
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${ext || "jpg"}`;
       const uploadOptions: { upsert: boolean; contentType?: string } = { upsert: true };
       if (file.type) uploadOptions.contentType = file.type;
-      const { error: uploadError } = await supabase.storage.from("gallery").upload(fileName, file, uploadOptions);
+      const { error: uploadError } = await supabase.storage
+        .from("gallery")
+        .upload(fileName, file, uploadOptions);
       if (uploadError) {
         console.error("Storage upload error:", uploadError);
         toast.error(`שגיאה בהעלאה: ${uploadError.message}`);
         return;
       }
       const { data: urlData } = supabase.storage.from("gallery").getPublicUrl(fileName);
-      await addImage.mutateAsync({ url: urlData.publicUrl, alt_text: file.name.replace(/\.[^.]+$/, "") });
+      await addImage.mutateAsync({
+        url: urlData.publicUrl,
+        alt_text: file.name.replace(/\.[^.]+$/, ""),
+      });
     } catch (err: any) {
       console.error("Upload handler error:", err);
       toast.error(`שגיאה בהעלאת הקובץ: ${err?.message || ""}`);
@@ -523,39 +704,85 @@ function GalleryPanel() {
     <div className="space-y-6">
       <div className="shadow-card rounded-3xl border border-border bg-card p-6">
         <h2 className="text-2xl font-medium">גלריית הסטודיו</h2>
-        <p className="mt-1 text-sm text-muted-foreground">תמונות המוצגות בעמוד הראשי. ניתן להוסיף, למחוק ולסדר מחדש.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          תמונות המוצגות בעמוד הראשי. ניתן להוסיף, למחוק ולסדר מחדש.
+        </p>
         <div className="mt-5 flex flex-wrap gap-3">
-          <Button className="rounded-full gap-1.5" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
-            {uploading ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
+          <Button
+            className="rounded-full gap-1.5"
+            disabled={uploading}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {uploading ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <ImagePlus className="size-4" />
+            )}
             העלאת תמונה
           </Button>
-          <Button variant="outline" className="rounded-full gap-1.5" onClick={() => setShowUrlForm((p) => !p)}>
+          <Button
+            variant="outline"
+            className="rounded-full gap-1.5"
+            onClick={() => setShowUrlForm((p) => !p)}
+          >
             <Plus className="size-4" /> הוספה בקישור
           </Button>
-          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileUpload}
+          />
         </div>
         {showUrlForm && (
           <div className="mt-5 rounded-2xl border border-border/70 p-4">
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <Label htmlFor="img_url">קישור לתמונה *</Label>
-                <Input id="img_url" className="mt-2 text-left" placeholder="https://..." dir="ltr"
-                  value={urlForm.url} onChange={(e) => setUrlForm((p) => ({ ...p, url: e.target.value }))} />
+                <Input
+                  id="img_url"
+                  className="mt-2 text-left"
+                  placeholder="https://..."
+                  dir="ltr"
+                  value={urlForm.url}
+                  onChange={(e) => setUrlForm((p) => ({ ...p, url: e.target.value }))}
+                />
               </div>
               <div>
                 <Label htmlFor="img_alt">טקסט חלופי (alt)</Label>
-                <Input id="img_alt" className="mt-2 text-right" placeholder="תיאור התמונה..."
-                  value={urlForm.alt_text} onChange={(e) => setUrlForm((p) => ({ ...p, alt_text: e.target.value }))} />
+                <Input
+                  id="img_alt"
+                  className="mt-2 text-right"
+                  placeholder="תיאור התמונה..."
+                  value={urlForm.alt_text}
+                  onChange={(e) => setUrlForm((p) => ({ ...p, alt_text: e.target.value }))}
+                />
               </div>
             </div>
             <div className="mt-3 flex gap-2">
-              <Button className="rounded-full gap-1.5" disabled={!urlForm.url || addImage.isPending}
-                onClick={() => addImage.mutate(urlForm)}>
-                {addImage.isPending ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+              <Button
+                className="rounded-full gap-1.5"
+                disabled={!urlForm.url || addImage.isPending}
+                onClick={() => addImage.mutate(urlForm)}
+              >
+                {addImage.isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Plus className="size-4" />
+                )}
                 הוספה
               </Button>
-              <Button variant="outline" className="rounded-full"
-                onClick={() => { setShowUrlForm(false); setUrlForm({ url: "", alt_text: "" }); }}>ביטול</Button>
+              <Button
+                variant="outline"
+                className="rounded-full"
+                onClick={() => {
+                  setShowUrlForm(false);
+                  setUrlForm({ url: "", alt_text: "" });
+                }}
+              >
+                ביטול
+              </Button>
             </div>
           </div>
         )}
@@ -563,35 +790,63 @@ function GalleryPanel() {
 
       <div className="shadow-card rounded-3xl border border-border bg-card p-6">
         {images.isLoading ? (
-          <div className="flex justify-center py-10"><Loader2 className="size-6 animate-spin text-muted-foreground" /></div>
+          <div className="flex justify-center py-10">
+            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          </div>
         ) : list.length === 0 ? (
-          <p className="rounded-2xl bg-secondary p-4 text-sm text-muted-foreground text-center">אין תמונות בגלריה עדיין.</p>
+          <p className="rounded-2xl bg-secondary p-4 text-sm text-muted-foreground text-center">
+            אין תמונות בגלריה עדיין.
+          </p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {list.map((img, idx) => (
-              <div key={img.id} className="group relative overflow-hidden rounded-2xl border border-border bg-secondary/30">
-                <img src={img.url} alt={img.alt_text}
+              <div
+                key={img.id}
+                className="group relative overflow-hidden rounded-2xl border border-border bg-secondary/30"
+              >
+                <img
+                  src={img.url}
+                  alt={img.alt_text}
                   className="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3C/svg%3E";
-                  }} />
+                    (e.target as HTMLImageElement).src =
+                      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3C/svg%3E";
+                  }}
+                />
                 <div className="absolute inset-0 flex flex-col justify-between bg-gradient-to-t from-black/70 via-transparent to-black/20 p-3 opacity-0 transition-opacity group-hover:opacity-100">
                   <div className="flex justify-between">
-                    <Button variant="secondary" size="icon" className="h-7 w-7 rounded-lg"
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="h-7 w-7 rounded-lg"
                       disabled={idx === 0 || moveImage.isPending}
-                      onClick={() => moveImage.mutate({ id: img.id, direction: "up" })} aria-label="הזזה">
+                      onClick={() => moveImage.mutate({ id: img.id, direction: "up" })}
+                      aria-label="הזזה"
+                    >
                       <ArrowUp className="size-3.5" />
                     </Button>
-                    <Button variant="secondary" size="icon" className="h-7 w-7 rounded-lg"
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="h-7 w-7 rounded-lg"
                       disabled={idx === list.length - 1 || moveImage.isPending}
-                      onClick={() => moveImage.mutate({ id: img.id, direction: "down" })} aria-label="הזזה">
+                      onClick={() => moveImage.mutate({ id: img.id, direction: "down" })}
+                      aria-label="הזזה"
+                    >
                       <ArrowDown className="size-3.5" />
                     </Button>
                   </div>
                   <div className="flex items-end justify-between gap-2">
-                    {img.alt_text && <p className="truncate text-xs text-white/80">{img.alt_text}</p>}
-                    <Button variant="destructive" size="icon" className="h-7 w-7 shrink-0 rounded-lg"
-                      onClick={() => setPendingDelete(img)} aria-label="מחיקה">
+                    {img.alt_text && (
+                      <p className="truncate text-xs text-white/80">{img.alt_text}</p>
+                    )}
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="h-7 w-7 shrink-0 rounded-lg"
+                      onClick={() => setPendingDelete(img)}
+                      aria-label="מחיקה"
+                    >
                       <Trash2 className="size-3.5" />
                     </Button>
                   </div>
@@ -610,8 +865,12 @@ function GalleryPanel() {
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row-reverse justify-start gap-2">
             <AlertDialogCancel className="rounded-full">ביטול</AlertDialogCancel>
-            <AlertDialogAction className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => pendingDelete && deleteImage.mutate(pendingDelete.id)}>מחיקה</AlertDialogAction>
+            <AlertDialogAction
+              className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => pendingDelete && deleteImage.mutate(pendingDelete.id)}
+            >
+              מחיקה
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
