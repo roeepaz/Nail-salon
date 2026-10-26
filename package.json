@@ -1,8 +1,8 @@
 {
-    "private":  true,
-    "workspaces":  [
-                       "apps/*",
-                       "packages/*"
-                   ],
-    "name":  "nail-salon-monorepo"
+  "name": "nail-salon-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }
